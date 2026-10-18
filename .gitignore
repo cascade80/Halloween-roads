@@ -1,0 +1,13 @@
+node_modules
+dist
+.vercel/
+.env*
+shots/critic-*/
+*.log
+*.mp4
+*.webm
+.worktrees/
+# research scratch
+refs/web/
+scripts/_refgrab.mjs
+shots/
