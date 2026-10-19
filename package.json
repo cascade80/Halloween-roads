@@ -8,7 +8,8 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview --port 5420 --strictPort",
     "typecheck": "tsc --noEmit",
-    "shoot": "node scripts/shoot.mjs"
+    "shoot": "node scripts/shoot.mjs",
+    "deploy": "npm run build && git -C dist init && git -C dist checkout -B gh-pages && git -C dist add -A && git -C dist commit -m 'deploy: update GitHub Pages' && git -C dist push -f origin gh-pages && rm -rf dist/.git"
   },
   "dependencies": {
     "three": "^0.186.0"
