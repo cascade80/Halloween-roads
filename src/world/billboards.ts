@@ -250,13 +250,14 @@ export class BillboardSystem {
       borderMesh.position.set(0, boardY, 0);
       group.add(borderMesh);
 
-      // Steel Support Pillars (Left & Right)
+      // Steel Support Pillars (Left & Right) — placed BEHIND the billboard frame (z = -0.25)
+      // so they never intersect, penetrate, or coincide with the front poster face (z = 0.12).
       const postLeft = new THREE.Mesh(postGeo, this.frameMaterial);
-      postLeft.position.set(-3.0, 2.8, 0);
+      postLeft.position.set(-2.8, 2.8, -0.25);
       group.add(postLeft);
 
       const postRight = new THREE.Mesh(postGeo, this.frameMaterial);
-      postRight.position.set(3.0, 2.8, 0);
+      postRight.position.set(2.8, 2.8, -0.25);
       group.add(postRight);
 
       // Top Floodlight Brackets (3 spots along top edge)
