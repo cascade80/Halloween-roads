@@ -6,6 +6,21 @@ export class Input {
   /** Shift held (sprint on the bike; the on-foot explorer reads Shift itself for running). */
   sprint = false;
 
+  /** Analog joystick inputs for smooth mobile/controller steering and throttle (-1..1 or 0..1). */
+  analogSteer = 0; // -1 (full right) to +1 (full left)
+  analogThrottle = 0; // 0 to 1
+  analogBrake = 0; // 0 to 1
+  analogFwd = 0; // -1 (backward) to +1 (forward)
+  analogStrafe = 0; // -1 (left) to +1 (right)
+
+  resetAnalog(): void {
+    this.analogSteer = 0;
+    this.analogThrottle = 0;
+    this.analogBrake = 0;
+    this.analogFwd = 0;
+    this.analogStrafe = 0;
+  }
+
   constructor(onFirst: () => void, onToggleView: () => void = () => {}) {
     const set = (code: string, v: boolean) => {
       switch (code) {
@@ -43,6 +58,7 @@ export class Input {
     addEventListener("pointerdown", onFirst);
     addEventListener("blur", () => {
       this.up = this.down = this.left = this.right = this.sprint = false;
+      this.resetAnalog();
     });
   }
 }

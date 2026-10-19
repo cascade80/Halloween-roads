@@ -14,7 +14,8 @@ export class OrientationOverlay {
           <path d="M6 11v7h7" />
         </svg>
         <div class="th-rot-title">ROTATE DEVICE</div>
-        <div class="th-rot-desc">Techyon requires landscape orientation for atmospheric visibility.</div>
+        <div class="th-rot-desc">Techyon is best played in landscape mode for full visibility and dual touch controls.</div>
+        <button class="th-rot-dismiss-btn">Continue in portrait anyway</button>
       </div>
     `;
 
@@ -41,7 +42,7 @@ export class OrientationOverlay {
         flex-direction: column;
         align-items: center;
         text-align: center;
-        padding: 32px;
+        padding: 32px 24px;
         max-width: 320px;
       }
       .th-rot-icon {
@@ -68,17 +69,47 @@ export class OrientationOverlay {
         line-height: 1.5;
         letter-spacing: 0.05em;
         color: #7a9cb5;
+        margin-bottom: 20px;
+      }
+      .th-rot-dismiss-btn {
+        background: transparent;
+        border: 1px solid rgba(104, 170, 219, 0.35);
+        color: #8bbdd8;
+        font-family: inherit;
+        font-size: 12px;
+        letter-spacing: 0.1em;
+        padding: 8px 16px;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .th-rot-dismiss-btn:hover, .th-rot-dismiss-btn:active {
+        background: rgba(104, 170, 219, 0.15);
+        border-color: #8bbdd8;
+        color: #e2f2fc;
       }
     `;
     document.head.appendChild(style);
     document.body.appendChild(this.el);
+
+    const dismissBtn = this.el.querySelector(".th-rot-dismiss-btn");
+    dismissBtn?.addEventListener("click", () => {
+      this.dismissed = true;
+      this.check();
+    });
 
     this.check();
     window.addEventListener("resize", () => this.check());
     window.addEventListener("orientationchange", () => this.check());
   }
 
+  private dismissed = false;
+
   private check(): void {
+    if (this.dismissed) {
+      this.el.classList.remove("visible");
+      return;
+    }
     const isPortrait = window.innerHeight > window.innerWidth;
     const isSmallScreen = Math.min(window.innerWidth, window.innerHeight) <= 600;
     if (isPortrait && isSmallScreen) {

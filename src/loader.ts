@@ -68,10 +68,15 @@ export class Loader {
     this.go = go;
     this.el.classList.add("go");
     this.pendingText = null;
-    this.show("click or press any key to enter the darkness", true);
+    this.show("tap or click to enter the darkness", true);
     const hint = this.el.querySelector<HTMLElement>(".hint");
     const auto = new URLSearchParams(location.search).has("autoplay");
-    if (hint && !auto) hint.innerHTML = "<b>WASD</b> walk &nbsp;·&nbsp; <b>Shift</b> lurch/sprint &nbsp;·&nbsp; <b>Mouse</b> look &nbsp;·&nbsp; <b>F</b> mount bike &nbsp;·&nbsp; <b>Esc</b> pause";
+    if (hint && !auto) {
+      const isMobile = "ontouchstart" in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 1024;
+      hint.innerHTML = isMobile
+        ? "<b>Left Joystick</b> steer & pedal &nbsp;·&nbsp; <b>Right Swipe</b> look &nbsp;·&nbsp; <b>Touch Buttons</b> ride, brake & sprint"
+        : "<b>WASD</b> walk &nbsp;·&nbsp; <b>Shift</b> lurch/sprint &nbsp;·&nbsp; <b>Mouse</b> look &nbsp;·&nbsp; <b>F</b> mount bike &nbsp;·&nbsp; <b>Esc</b> pause";
+    }
   }
 
   /** Watercolour dissolve: holes bloom outward from the middle through the paper, pigment pooling at the edges. */

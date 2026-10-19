@@ -309,6 +309,8 @@ const mobileControls = new MobileControls(
   pause,
   () => rider.bike.ringBell(),
   () => hoardingModal.toggle(explore.playerX, explore.playerZ),
+  () => chase.toggle(),
+  () => audio.start(),
 );
 
 addEventListener("keydown", (e) => {

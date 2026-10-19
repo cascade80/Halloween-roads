@@ -612,8 +612,8 @@ export class Explore {
   }
 
   private locomotion(dt: number, input: Input): void {
-    let fwd = (input.up ? 1 : 0) - (input.down ? 1 : 0);
-    let str = (input.right ? 1 : 0) - (input.left ? 1 : 0);
+    let fwd = Math.abs(input.analogFwd) > 0.04 ? input.analogFwd : ((input.up ? 1 : 0) - (input.down ? 1 : 0));
+    let str = Math.abs(input.analogStrafe) > 0.04 ? input.analogStrafe : ((input.right ? 1 : 0) - (input.left ? 1 : 0));
     const sy = Math.sin(this.oYaw), cy = Math.cos(this.oYaw);
     let wx = -sy * fwd + cy * str;
     let wz = -cy * fwd - sy * str;
@@ -670,6 +670,13 @@ export class Explore {
     this.oYaw = wrapA(this.oYaw - mx * 0.0055);
     this.oPitch = clamp(this.oPitch + my * 0.004, PITCH_MIN, PITCH_MAX);
     this.touched = 3;
+  }
+
+  /** Recenter camera directly behind character. */
+  recenter(): void {
+    this.oYaw = this.yaw;
+    this.oPitch = 0.14;
+    this.touched = 0;
   }
 
   /** Test / script hook: camera bearing relative to her facing (0 = behind, π = in front), pitch, distance. */

@@ -49,7 +49,7 @@ export class Pause {
       <div class="phead">Paused</div>
       <div class="prule"></div>
       <dl class="pkeys">${CONTROLS.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>
-      <div class="pgo">click to resume</div>
+      <div class="pgo">tap or click to resume</div>
       <div class="pnote"><b>Esc</b> · <b>Enter</b> · <b>Space</b> also resume &nbsp;—&nbsp; hold <b>Esc</b> to free the mouse</div>
     </div>`;
     document.body.appendChild(this.el);

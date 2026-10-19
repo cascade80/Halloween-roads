@@ -68,9 +68,11 @@ export class Controller {
       const delta = Math.atan((2 * BIKE.WHEELBASE * Math.sin(err)) / la);
       steerIn = clamp(delta / 0.3, -1, 1);
     } else {
-      throttle = input.up ? 1 : 0;
-      brake = input.down ? 1 : 0;
-      steerIn = (input.left ? 1 : 0) - (input.right ? 1 : 0);
+      throttle = Math.max(input.analogThrottle, input.up ? 1 : 0);
+      brake = Math.max(input.analogBrake, input.down ? 1 : 0);
+      steerIn = Math.abs(input.analogSteer) > 0.04
+        ? input.analogSteer
+        : (input.left ? 1 : 0) - (input.right ? 1 : 0);
     }
 
     // Sprint: Shift (with or without W) pushes toward SPRINT_MAX; releasing lets the cap sink back

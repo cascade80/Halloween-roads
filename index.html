@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='7' fill='%23a4c6dc'/%3E%3C/svg%3E" />
     <title>Techyon — JUET Halloween TechFest</title>
     <meta name="description" content="Techyon: A haunting, atmospheric midnight journey through an abandoned countryside with haunted shrines and forgotten settlements. JUET Halloween TechFest edition." />
@@ -23,7 +23,17 @@
     <meta name="twitter:image" content="https://starknightt.github.io/techyon/og.jpg" />
     <meta name="twitter:image:alt" content="A haunting midnight journey through a moonlit, foggy haunted countryside" />
     <style>
-      html, body { margin: 0; height: 100%; overflow: hidden; background: #080d14; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #080d14;
+        touch-action: none;
+        overscroll-behavior: none;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
       canvas { display: block; }
       #hud {
         position: fixed; right: 28px; bottom: 22px;

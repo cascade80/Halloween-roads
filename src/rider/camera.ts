@@ -151,6 +151,14 @@ export class ChaseCam {
     }
   }
 
+  /** Recenter camera look offsets behind rider. */
+  recenter(): void {
+    this.lYaw = 0;
+    this.lPitch = 0;
+    this.fYaw = 0;
+    this.fPitch = 0;
+  }
+
   /** Current mouse-look offsets (test hook). */
   get lookState(): { yaw: number; pitch: number; fppYaw: number; fppPitch: number } {
     return { yaw: this.lYawS, pitch: this.lPitchS, fppYaw: this.fYawS, fppPitch: this.fPitchS };
