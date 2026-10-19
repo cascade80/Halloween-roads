@@ -67,52 +67,89 @@ export class MobileControls {
     this.container = document.createElement("div");
     this.container.id = "techyon-mobile-controls";
 
-    // 1. Joystick Elements
+    // 1. Joystick Elements (clean minimal design, no radar arrows or sci-fi rings)
     this.joystickBase = document.createElement("div");
     this.joystickBase.className = "th-joystick-base";
-    this.joystickBase.innerHTML = `
-      <div class="th-joy-ring"></div>
-      <div class="th-joy-arrow up">▲</div>
-      <div class="th-joy-arrow left">◀</div>
-      <div class="th-joy-arrow right">▶</div>
-      <div class="th-joy-arrow down">▼</div>
-    `;
+    this.joystickBase.innerHTML = "";
     this.joystickKnob = document.createElement("div");
     this.joystickKnob.className = "th-joystick-knob";
     this.joystickBase.appendChild(this.joystickKnob);
     this.container.appendChild(this.joystickBase);
 
-    // 2. Action buttons cluster (Bottom-Right)
+    // 2. Action buttons cluster (Bottom-Right, minimal 2-row layout)
     const buttonCluster = document.createElement("div");
     buttonCluster.className = "th-btn-cluster";
 
+    const rowSecondary = document.createElement("div");
+    rowSecondary.className = "th-btn-row th-btn-row-secondary";
+
+    const rowPrimary = document.createElement("div");
+    rowPrimary.className = "th-btn-row th-btn-row-primary";
+
     // Money / Rates Button
     this.moneyBtn = document.createElement("button");
-    this.moneyBtn.className = "th-m-btn th-money-btn";
+    this.moneyBtn.className = "th-m-btn th-m-btn-sm th-money-btn";
     this.moneyBtn.style.display = "none";
-    this.moneyBtn.innerHTML = `<span>$ RATES</span>`;
+    this.moneyBtn.innerHTML = `<span>Rates</span>`;
     this.moneyBtn.addEventListener("touchstart", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      this.vibrate(20);
+      this.vibrate(15);
       this.onCheckMoney?.();
+    }, { passive: false });
+
+    // Camera Switch Button
+    this.camBtn = document.createElement("button");
+    this.camBtn.className = "th-m-btn th-m-btn-sm th-cam-btn";
+    this.camBtn.innerHTML = `<span>Cam</span>`;
+    this.camBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.vibrate(15);
+      if (this.onToggleCamera) this.onToggleCamera();
+      else this.chase.toggle();
+    }, { passive: false });
+
+    // Sprint Button
+    this.sprintBtn = document.createElement("button");
+    this.sprintBtn.className = "th-m-btn th-m-btn-sm th-sprint-btn";
+    this.sprintBtn.innerHTML = `<span>Sprint</span>`;
+    this.sprintBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.vibrate(15);
+      this.sprintLocked = !this.sprintLocked;
+      this.input.sprint = this.sprintLocked;
+      this.sprintBtn.classList.toggle("active", this.sprintLocked);
+    }, { passive: false });
+
+    // Bell Button
+    this.bellBtn = document.createElement("button");
+    this.bellBtn.className = "th-m-btn th-m-btn-sm th-bell-btn";
+    this.bellBtn.innerHTML = `<span>Bell</span>`;
+    this.bellBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.vibrate(15);
+      this.onRingBell();
     }, { passive: false });
 
     // Mount / Walk Button
     this.mountBtn = document.createElement("button");
     this.mountBtn.className = "th-m-btn th-mount-btn";
-    this.mountBtn.innerHTML = `<span>RIDE / WALK</span>`;
+    this.mountBtn.innerHTML = `<span>Ride</span>`;
     this.mountBtn.addEventListener("touchstart", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      this.vibrate(20);
+      this.vibrate(15);
       this.explore.pressF();
+      this.updateMountLabel();
     }, { passive: false });
 
     // Brake / Reverse Button
     this.brakeBtn = document.createElement("button");
     this.brakeBtn.className = "th-m-btn th-brake-btn";
-    this.brakeBtn.innerHTML = `<span>BRAKE</span>`;
+    this.brakeBtn.innerHTML = `<span>Brake</span>`;
     const startBrake = (e: Event) => {
       e.preventDefault();
       e.stopPropagation();
@@ -134,48 +171,16 @@ export class MobileControls {
     this.brakeBtn.addEventListener("touchend", endBrake, { passive: false });
     this.brakeBtn.addEventListener("touchcancel", endBrake, { passive: false });
 
-    // Sprint Button
-    this.sprintBtn = document.createElement("button");
-    this.sprintBtn.className = "th-m-btn th-sprint-btn";
-    this.sprintBtn.innerHTML = `<span>SPRINT</span>`;
-    this.sprintBtn.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.vibrate(18);
-      this.sprintLocked = !this.sprintLocked;
-      this.input.sprint = this.sprintLocked;
-      this.sprintBtn.classList.toggle("active", this.sprintLocked);
-    }, { passive: false });
+    rowSecondary.appendChild(this.moneyBtn);
+    rowSecondary.appendChild(this.camBtn);
+    rowSecondary.appendChild(this.sprintBtn);
+    rowSecondary.appendChild(this.bellBtn);
 
-    // Bell Button
-    this.bellBtn = document.createElement("button");
-    this.bellBtn.className = "th-m-btn th-bell-btn";
-    this.bellBtn.innerHTML = `<span>BELL</span>`;
-    this.bellBtn.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.vibrate(15);
-      this.onRingBell();
-    }, { passive: false });
+    rowPrimary.appendChild(this.mountBtn);
+    rowPrimary.appendChild(this.brakeBtn);
 
-    // Camera Switch Button (V)
-    this.camBtn = document.createElement("button");
-    this.camBtn.className = "th-m-btn th-cam-btn";
-    this.camBtn.innerHTML = `<span>CAM [V]</span>`;
-    this.camBtn.addEventListener("touchstart", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      this.vibrate(15);
-      if (this.onToggleCamera) this.onToggleCamera();
-      else this.chase.toggle();
-    }, { passive: false });
-
-    buttonCluster.appendChild(this.moneyBtn);
-    buttonCluster.appendChild(this.camBtn);
-    buttonCluster.appendChild(this.mountBtn);
-    buttonCluster.appendChild(this.brakeBtn);
-    buttonCluster.appendChild(this.sprintBtn);
-    buttonCluster.appendChild(this.bellBtn);
+    buttonCluster.appendChild(rowSecondary);
+    buttonCluster.appendChild(rowPrimary);
     this.container.appendChild(buttonCluster);
 
     // 3. Top Controls Bar (Top-Right)
@@ -397,9 +402,9 @@ export class MobileControls {
   }
 
   private getJoystickDimensions(): { diameter: number; radius: number; maxRadius: number } {
-    if (this.prefs.size === "compact") return { diameter: 106, radius: 53, maxRadius: 44 };
-    if (this.prefs.size === "large") return { diameter: 168, radius: 84, maxRadius: 70 };
-    return { diameter: 136, radius: 68, maxRadius: 56 };
+    if (this.prefs.size === "compact") return { diameter: 96, radius: 48, maxRadius: 40 };
+    if (this.prefs.size === "large") return { diameter: 144, radius: 72, maxRadius: 60 };
+    return { diameter: 118, radius: 59, maxRadius: 48 };
   }
 
   private getSensitivityMultiplier(): number {
@@ -626,6 +631,12 @@ export class MobileControls {
     this.joystickKnob.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
   }
 
+  updateMountLabel(): void {
+    if (this.mountBtn) {
+      this.mountBtn.innerHTML = `<span>${this.explore.onFoot ? "Ride" : "Walk"}</span>`;
+    }
+  }
+
   setMoneyButtonVisible(visible: boolean): void {
     if (this.moneyBtn) {
       this.moneyBtn.style.display = visible ? "flex" : "none";
@@ -649,173 +660,168 @@ export class MobileControls {
       #techyon-mobile-controls.visible {
         display: block;
       }
+      @media (pointer: coarse), (max-width: 900px) {
+        #hud { display: none !important; }
+      }
 
-      /* Joystick Base */
+      /* Minimal Clean Joystick Base */
       .th-joystick-base {
         position: absolute;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(16, 26, 42, 0.65), rgba(8, 14, 22, 0.85));
-        border: 2px solid rgba(80, 160, 220, 0.45);
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.75), inset 0 0 16px rgba(50, 120, 180, 0.2);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.18);
         pointer-events: none;
         opacity: 0;
         transform: translate(-50%, -50%);
-        transition: opacity 0.25s ease, border-color 0.2s ease;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        transition: opacity 0.2s ease, border-color 0.2s ease;
       }
       .th-joystick-base.fixed {
-        opacity: 0.82;
+        opacity: 0.55;
       }
       .th-joystick-base.active {
-        opacity: 1;
-        border-color: rgba(130, 215, 255, 0.85);
-        box-shadow: 0 0 24px rgba(70, 160, 230, 0.4), inset 0 0 20px rgba(70, 160, 230, 0.3);
+        opacity: 0.9;
+        border-color: rgba(255, 255, 255, 0.35);
       }
 
       /* Sizes */
       .th-joystick-base.compact {
-        width: 106px;
-        height: 106px;
+        width: 96px;
+        height: 96px;
       }
       .th-joystick-base.compact .th-joystick-knob {
-        width: 46px;
-        height: 46px;
+        width: 40px;
+        height: 40px;
       }
       .th-joystick-base.normal {
-        width: 136px;
-        height: 136px;
+        width: 118px;
+        height: 118px;
       }
       .th-joystick-base.normal .th-joystick-knob {
-        width: 56px;
-        height: 56px;
+        width: 48px;
+        height: 48px;
       }
       .th-joystick-base.large {
-        width: 168px;
-        height: 168px;
+        width: 144px;
+        height: 144px;
       }
       .th-joystick-base.large .th-joystick-knob {
-        width: 68px;
-        height: 68px;
+        width: 58px;
+        height: 58px;
       }
 
-      /* Inner Orbit Ring & Directional Arrows */
-      .th-joy-ring {
-        position: absolute;
-        inset: 15%;
-        border-radius: 50%;
-        border: 1px dashed rgba(120, 180, 230, 0.25);
-        pointer-events: none;
-      }
-      .th-joy-arrow {
-        position: absolute;
-        font-size: 11px;
-        color: rgba(140, 195, 240, 0.4);
-        pointer-events: none;
-        transform: translate(-50%, -50%);
-      }
-      .th-joy-arrow.up { top: 12%; left: 50%; }
-      .th-joy-arrow.down { bottom: 6%; left: 50%; }
-      .th-joy-arrow.left { top: 50%; left: 12%; }
-      .th-joy-arrow.right { top: 50%; right: 4%; }
-
-      /* Joystick Knob */
+      /* Minimal Joystick Knob */
       .th-joystick-knob {
         position: absolute;
         left: 50%;
         top: 50%;
         border-radius: 50%;
-        background: radial-gradient(circle at 35% 35%, #58a4d4, #183852 75%, #0e2030);
-        border: 2.5px solid rgba(180, 230, 255, 0.9);
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85), 0 0 16px rgba(100, 190, 255, 0.55);
+        background: rgba(255, 255, 255, 0.38);
+        border: 1.5px solid rgba(255, 255, 255, 0.75);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
         transform: translate(-50%, -50%);
         will-change: transform;
       }
 
-      /* Action Buttons Cluster */
+      /* Action Buttons Cluster: Clean Minimal 2-Row Layout */
       .th-btn-cluster {
         position: absolute;
-        right: max(20px, env(safe-area-inset-right));
-        bottom: max(20px, env(safe-area-inset-bottom));
-        display: grid;
-        grid-template-columns: repeat(3, auto);
-        gap: 12px;
+        right: max(16px, env(safe-area-inset-right));
+        bottom: max(16px, env(safe-area-inset-bottom));
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
         pointer-events: auto;
       }
+      .th-btn-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      /* Clean Frosted Minimal Buttons */
       .th-m-btn {
-        width: 66px;
-        height: 66px;
+        width: 50px;
+        height: 50px;
         border-radius: 50%;
-        border: 1.5px solid rgba(100, 160, 215, 0.5);
-        background: radial-gradient(circle, rgba(22, 36, 54, 0.9), rgba(10, 18, 28, 0.96));
-        color: #d6e8f7;
-        font-family: "Palatino Linotype", Palatino, serif;
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.08em;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(14, 18, 24, 0.45);
+        color: rgba(255, 255, 255, 0.9);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
         display: flex;
         align-items: center;
         justify-content: center;
         text-align: center;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.75), inset 0 0 8px rgba(80, 140, 200, 0.2);
-        backdrop-filter: blur(6px);
-        -webkit-backdrop-filter: blur(6px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         touch-action: manipulation;
-        transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+        transition: transform 0.1s ease, background 0.12s ease, opacity 0.12s ease;
+      }
+      .th-m-btn-sm {
+        width: 40px;
+        height: 40px;
+        font-size: 10px;
+        opacity: 0.8;
       }
       .th-m-btn:active, .th-m-btn.active {
-        background: radial-gradient(circle, rgba(50, 100, 150, 0.96), rgba(20, 45, 70, 0.98));
-        border-color: #82d2ff;
-        box-shadow: 0 0 20px rgba(130, 210, 255, 0.7);
+        background: rgba(255, 255, 255, 0.24);
+        border-color: rgba(255, 255, 255, 0.6);
+        color: #ffffff;
         transform: scale(0.92);
       }
       .th-brake-btn {
-        border-color: rgba(220, 80, 90, 0.6);
-        color: #ffb4b8;
-        background: radial-gradient(circle, rgba(48, 16, 24, 0.9), rgba(24, 8, 14, 0.96));
+        background: rgba(36, 16, 18, 0.45);
+        border-color: rgba(240, 120, 130, 0.3);
+        color: #ffd2d6;
       }
       .th-brake-btn:active, .th-brake-btn.active {
-        border-color: #ff6874;
-        background: radial-gradient(circle, rgba(140, 30, 45, 0.96), rgba(60, 12, 20, 0.98));
-        box-shadow: 0 0 20px rgba(255, 100, 120, 0.7);
-      }
-      .th-money-btn {
-        border-color: #48cae4;
-        background: radial-gradient(circle, rgba(20, 60, 90, 0.92), rgba(8, 28, 45, 0.96));
-        color: #72e0f8;
+        background: rgba(160, 40, 50, 0.6);
+        border-color: rgba(255, 140, 150, 0.7);
+        color: #ffffff;
       }
       .th-sprint-btn.active {
-        border-color: #f7a034;
-        box-shadow: 0 0 18px rgba(247, 160, 52, 0.7);
-        color: #ffdd99;
+        background: rgba(255, 255, 255, 0.28);
+        border-color: rgba(255, 255, 255, 0.7);
+      }
+      .th-money-btn {
+        background: rgba(20, 36, 48, 0.45);
+        border-color: rgba(130, 200, 240, 0.35);
+        color: #aee0f8;
       }
 
-      /* Top Controls Bar */
+      /* Top Minimal Controls Bar */
       .th-top-touch-bar {
         position: absolute;
-        top: max(16px, env(safe-area-inset-top));
-        right: max(20px, env(safe-area-inset-right));
+        top: max(14px, env(safe-area-inset-top));
+        right: max(16px, env(safe-area-inset-right));
         display: flex;
-        gap: 10px;
+        gap: 8px;
         pointer-events: auto;
       }
       .th-top-btn {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        background: rgba(14, 24, 38, 0.85);
-        border: 1px solid rgba(90, 150, 200, 0.45);
-        color: #c4dcf2;
-        font-size: 15px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: rgba(14, 18, 24, 0.4);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 13px;
         display: grid;
         place-items: center;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
         cursor: pointer;
-        transition: transform 0.12s ease, border-color 0.15s ease;
+        transition: transform 0.1s ease, background 0.12s ease;
       }
       .th-top-btn:active {
-        transform: scale(0.9);
-        border-color: #82d2ff;
+        transform: scale(0.92);
+        background: rgba(255, 255, 255, 0.2);
       }
 
       /* Mobile Settings Modal */
@@ -823,7 +829,7 @@ export class MobileControls {
         position: fixed;
         inset: 0;
         z-index: 50;
-        background: rgba(4, 8, 14, 0.88);
+        background: rgba(4, 6, 10, 0.75);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         display: none;
@@ -835,35 +841,34 @@ export class MobileControls {
         display: grid;
       }
       .th-ms-card {
-        background: linear-gradient(145deg, #0e1a29, #08101a);
-        border: 1.5px solid rgba(80, 145, 205, 0.45);
-        border-radius: 14px;
+        background: rgba(18, 22, 28, 0.92);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 12px;
         width: 100%;
-        max-width: 480px;
-        padding: 24px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9), 0 0 24px rgba(70, 140, 210, 0.2);
-        color: #e2f2fc;
-        font-family: "Palatino Linotype", Palatino, Georgia, serif;
+        max-width: 440px;
+        padding: 20px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+        color: #f0f0f0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       }
       .th-ms-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 1px solid rgba(80, 145, 205, 0.25);
-        padding-bottom: 12px;
-        margin-bottom: 18px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        padding-bottom: 10px;
+        margin-bottom: 16px;
       }
       .th-ms-title {
-        font-size: 15px;
-        letter-spacing: 0.16em;
-        color: #82d2ff;
-        font-weight: 700;
+        font-size: 14px;
+        font-weight: 600;
+        color: #ffffff;
       }
       .th-ms-close {
         background: transparent;
         border: none;
-        color: #8aa4ba;
-        font-size: 18px;
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 16px;
         cursor: pointer;
         padding: 4px 8px;
       }
@@ -872,64 +877,58 @@ export class MobileControls {
       }
       .th-ms-row label {
         display: block;
-        font-size: 12px;
-        letter-spacing: 0.08em;
-        color: #9cb8ce;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.6);
         margin-bottom: 6px;
       }
       .th-ms-group {
         display: flex;
-        gap: 8px;
+        gap: 6px;
       }
       .th-ms-group button {
         flex: 1;
-        padding: 8px 10px;
+        padding: 7px 10px;
         border-radius: 6px;
-        background: rgba(20, 36, 56, 0.6);
-        border: 1px solid rgba(70, 130, 185, 0.35);
-        color: #b8d2e8;
-        font-size: 12px;
-        letter-spacing: 0.04em;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 11px;
         font-family: inherit;
         cursor: pointer;
-        transition: all 0.15s ease;
+        transition: all 0.12s ease;
       }
       .th-ms-group button.active {
-        background: linear-gradient(135deg, #1c4b75, #103352);
-        border-color: #82d2ff;
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.45);
         color: #ffffff;
-        box-shadow: 0 0 10px rgba(130, 210, 255, 0.45);
       }
       .th-ms-footer {
-        margin-top: 20px;
-        border-top: 1px solid rgba(80, 145, 205, 0.25);
-        padding-top: 14px;
+        margin-top: 16px;
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        padding-top: 12px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
       }
       .th-ms-tip {
         font-size: 11px;
-        color: #6a8ea8;
+        color: rgba(255, 255, 255, 0.45);
         text-align: center;
-        letter-spacing: 0.05em;
       }
       .th-ms-done-btn {
         width: 100%;
-        padding: 11px;
-        border-radius: 8px;
-        background: linear-gradient(135deg, #245888, #14385a);
-        border: 1.5px solid #82d2ff;
+        padding: 10px;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.35);
         color: #ffffff;
         font-family: inherit;
-        font-size: 13px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
+        font-size: 12px;
+        font-weight: 600;
         cursor: pointer;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
       }
       .th-ms-done-btn:active {
-        transform: scale(0.98);
+        background: rgba(255, 255, 255, 0.28);
       }
     `;
     document.head.appendChild(style);

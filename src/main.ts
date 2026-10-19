@@ -485,6 +485,7 @@ function frame(now: number) {
   hud.textContent = onFoot ? "WASD · Walk  |  Shift · Lurch  |  F · Ride" : `${Math.round(ctl.speed * 3.6)} km/h`;
   const nearHoarding = hoardingModal.update(px, pz);
   mobileControls.setMoneyButtonVisible(!!nearHoarding);
+  mobileControls.updateMountLabel();
   frames++;
   fpsT += dt;
   if (fpsT >= 1) {
