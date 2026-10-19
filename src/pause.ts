@@ -10,15 +10,15 @@ const TAP = 0.4; // s: shorter Esc presses are taps
 const HOLD = 0.5; // s: with keyboard lock, release the mouse once Esc has been held this long
 
 const CONTROLS: [string, string][] = [
-  ["W  S", "walk / shamble · retreat"],
-  ["A  D", "turn / wander"],
-  ["Shift", "lurch · sprint"],
+  ["W  S", "pedal / walk · brake / retreat"],
+  ["A  D", "steer / turn"],
+  ["Shift", "sprint"],
   ["Mouse", "look around"],
   ["F", "mount · dismount bicycle"],
   ["C", "cinematic cameras"],
   ["V", "first person"],
   ["T", "time of day"],
-  ["B", "eerie bicycle bell"],
+  ["B", "bicycle bell"],
   ["M", "mute ambience"],
 ];
 

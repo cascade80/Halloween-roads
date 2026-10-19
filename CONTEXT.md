@@ -181,8 +181,52 @@ npm run preview
 
 ---
 
-## 8. Git & Repository Management Notes
+---
 
-- **Clean Branch Strategy:** The primary production branch is `main`. The heavy test screenshot directory (`shots/` ~474 MB) has been removed from git tracking on `main` and added to `.gitignore`. This keeps git clone and push sizes under **~12 MB**.
-- **Historical Backups:** The legacy git history containing all prior iteration screenshots is preserved locally in the branch `main-history`.
-- **Target Remote:** `origin` points to `https://github.com/cascade80/Halloween-roads.git`.
+## 9. Highway Billboards & Hoardings (Custom Image Display)
+
+Techyon features **8 large, equidistant roadside billboards** placed every 80 meters along the 640-meter looped road.
+
+### Dimensions & Placement
+- **Dimensions:** 8.0 m wide $\times$ 4.5 m tall (16:9 widescreen format), elevated on dual 5.6 m steel pillars with overhead triple floodlight fixtures and glowing lamp lenses.
+- **Placement (Equidistant every 80m along the open left verge):**
+  - **Billboard 0:** $z = -80\text{ m}$, Left verge ($u = -7.0\text{ m}$) — 26m ahead of spawn, immediate view
+  - **Billboard 1:** $z = -160\text{ m}$, Left verge ($u = -7.0\text{ m}$)
+  - **Billboard 2:** $z = -240\text{ m}$, Left verge ($u = -7.0\text{ m}$)
+  - **Billboard 3:** $z = -320\text{ m}$, Left verge ($u = -7.0\text{ m}$)
+  - **Billboard 4:** $z = -400\text{ m}$, Left verge ($u = -7.0\text{ m}$)
+  - **Billboard 5:** $z = -480\text{ m}$, Left verge ($u = -7.0\text{ m}$)
+  - **Billboard 6:** $z = -560\text{ m}$, Left verge ($u = -7.0\text{ m}$)
+  - **Billboard 7:** $z = -640\text{ m}$, Left verge ($u = -7.0\text{ m}$)
+- **Building Clearance:** All houses, shops, and settlement structures exist on the right side of the road ($u > 0$). By placing hoardings along the left verge ($u = -7.0\text{ m}$), zero billboards intersect any buildings.
+- **Roadside Tree Removal:** A 28-meter-wide clear road corridor ($|u| < 14\text{ m}$) has all roadside trees and encroaching bushes filtered out. Background forest ($|u| \ge 14\text{ m}$) remains intact for atmospheric depth while sightlines to every billboard stay completely unobstructed.
+- **Readability:** Double-sided GLSL3 MRT shaders with `uEmissive: 1.25`, triple glowing floodlights, and gentle distance fog integration ensure graphics and custom text stay razor-sharp and vivid through the dark midnight fog.
+
+### Displaying Custom Images
+You can display custom images on any billboard dynamically in three ways:
+
+1. **Via Browser Console / JavaScript API:**
+   ```javascript
+   // Set image on a specific billboard (0 to 7)
+   window.techyon.setBillboardImage(0, "https://example.com/poster.jpg");
+
+   // Set multiple billboards at once
+   window.techyon.setBillboardImages([
+     "https://example.com/banner1.png",
+     "https://example.com/banner2.png"
+   ]);
+
+   // Reset to default atmospheric poster
+   window.techyon.resetBillboard(0);
+   ```
+
+2. **Via URL Parameters (No code required):**
+   ```
+   https://your-site/?billboard0=https://example.com/my-poster.jpg
+   https://your-site/?billboards=https://site/img0.png,https://site/img1.png
+   ```
+
+3. **Default Atmospheric Posters:**
+   When no custom image is supplied, high-resolution procedural posters are rendered automatically (Techyon Fest, Highway Curfew, JUET Arena, Occult Protocol, Esports Championship, Emergency Radio, Black Forest Notice, and Lore Milestone).
+
+

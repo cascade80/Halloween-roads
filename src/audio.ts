@@ -78,6 +78,10 @@ export class RideAudio {
     return this.vol;
   }
 
+  get context(): AudioContext | null {
+    return this.ctx;
+  }
+
   /** Create (or resume) the audio context. Call from a user gesture. */
   start(): void {
     if (this.ctx) {

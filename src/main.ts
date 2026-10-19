@@ -21,6 +21,9 @@ import { TimeOfDay, type Preset } from "./world/timeofday";
 import { Fireflies } from "./world/fireflies";
 import { Profiler } from "./render/profiler";
 import { specializeUber } from "./render/materials";
+import { BillboardSystem } from "./world/billboards";
+import { MobileControls } from "./ui/mobileControls";
+import { OrientationOverlay } from "./ui/orientationOverlay";
 
 const params = new URLSearchParams(location.search);
 const AUTOPLAY = params.has("autoplay") && params.get("autoplay") !== "0";
@@ -198,7 +201,9 @@ const tod = new TimeOfDay(post, shadow, params);
 }
 const audio = new RideAudio();
 const input = new Input(
-  () => audio.start(),
+  () => {
+    audio.start();
+  },
   () => {
     if (!explore.onFoot) chase.toggle();
   },
@@ -274,6 +279,24 @@ const pause = new Pause(canvasEl, {
   },
   lookHint: () => showLookHint(),
 });
+
+// --- Techyon Roadside Billboards ---
+const billboards = new BillboardSystem();
+scene.add(billboards.root);
+
+// Allow setting billboard images via URL parameters e.g. ?billboard0=url or ?billboards=url0,url1,...
+if (params.has("billboards")) {
+  const urls = params.get("billboards")!.split(",").map((s) => s.trim());
+  billboards.setImages(urls);
+}
+for (let i = 0; i < 8; i++) {
+  if (params.has(`billboard${i}`)) {
+    billboards.setImage(i, params.get(`billboard${i}`)!);
+  }
+}
+
+new OrientationOverlay();
+new MobileControls(input, explore, chase, pause, () => rider.bike.ringBell());
 
 addEventListener("resize", () => {
   renderer.setSize(innerWidth, innerHeight);
@@ -360,6 +383,7 @@ function frame(now: number) {
   const px = explore.playerX, pz = explore.playerZ;
   prof.cpuBegin("world");
   world.update(pz);
+  billboards.update(pz);
   prof.cpuEnd();
   prof.cpuBegin("rider");
   // Wheels stand on the road surface (0.02 above the ground plane).
@@ -493,6 +517,10 @@ window.__ride = {
   birds,
   prof,
   world,
+  billboards,
+  setBillboardImage: (idx: number, url: string) => billboards.setImage(idx, url),
+  setBillboardImages: (urls: string[]) => billboards.setImages(urls),
+  resetBillboard: (idx?: number) => billboards.reset(idx),
   get aaLog() {
     return AA.log;
   },
@@ -649,4 +677,23 @@ window.__ride = {
       z: ctl.z,
     };
   },
+};
+
+(window as unknown as { techyon: unknown }).techyon = {
+  setBillboardImage: (idx: number, url: string) => billboards.setImage(idx, url),
+  setBillboardImages: (urls: string[]) => billboards.setImages(urls),
+  resetBillboard: (idx?: number) => billboards.reset(idx),
+  teleportToBillboard: (idx: number) => {
+    if (idx < 0 || idx >= 8) return;
+    const slotZ = -(idx + 1) * 80;
+    ctl.z = slotZ + 20; // 20m before the billboard, perfectly facing it
+    ctl.x = roadX(ctl.z);
+    ctl.yaw = roadYaw(ctl.z);
+    if (explore.onFoot) {
+      explore.z = ctl.z;
+      explore.x = ctl.x;
+      rider.walker.position.set(ctl.x, 0, ctl.z);
+    }
+  },
+  billboards,
 };

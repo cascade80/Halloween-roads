@@ -730,6 +730,8 @@ export function buildChunk(k: number): Chunk {
   const trees: Record<string, Inst> = {};
   const farTrees: Record<string, Inst> = {};
   const addTree = (kind: TreeKind, u: number, z: number, s: number, far = false, rng: Rng = r) => {
+    // Remove all trees next to the road: keep a clear 28m corridor (|u| >= 14) for road sightlines & billboards
+    if (Math.abs(u) < 14) return;
     const variants = far ? P.far[kind] : P.trees[kind];
     const vi = Math.floor(rng() * variants.length);
     const key = `${kind}${vi}`;
