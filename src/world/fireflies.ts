@@ -34,9 +34,10 @@ export class Fireflies {
       vertexShader: /* glsl */ `
         uniform float uTime; uniform float uNight;
         in vec4 aOff;
-        out vec2 vQ; out float vB;
+        out vec2 vQ; out float vB; out float vPh;
         void main(){
           float ph = aOff.w, t = uTime;
+          vPh = ph;
           vec3 c = aOff.xyz + vec3(sin(t * 0.37 + ph) * 0.9 + sin(t * 1.3 + ph * 2.0) * 0.2,
                                    sin(t * 0.8 + ph * 1.7) * 0.28,
                                    cos(t * 0.29 + ph * 1.3) * 0.9);
@@ -52,16 +53,28 @@ export class Fireflies {
           gl_Position = projectionMatrix * viewMatrix * vec4(c + (right * position.x + up * position.y) * s, 1.0);
         }`,
       fragmentShader: /* glsl */ `
-        in vec2 vQ; in float vB;
+        in vec2 vQ; in float vB; in float vPh;
         layout(location = 0) out vec4 gColor;
         layout(location = 1) out vec4 gNormal;
         void main(){
           float r = length(vQ);
           if (r > 1.0 || vB < 0.01) discard;
           float k = 1.0 - smoothstep(0.15, 1.0, r);
-          // Ethereal will-o'-the-wisp: ghostly pale cyan and silver-blue embers
-          vec3 wispCol = mix(vec3(0.32, 0.72, 0.88), vec3(0.82, 0.94, 1.0), k);
-          gColor = vec4(wispCol * (0.5 + 3.8 * k) * vB, 1.0);
+          // Multi-colored supernatural spirit wisps & embers:
+          // 40% warm golden embers, 35% cyan spirit lights, 25% electric violet spectral motes
+          float typeRoll = fract(vPh * 7.13);
+          vec3 wispCol;
+          if (typeRoll < 0.40) {
+            // Golden pumpkin festival ember
+            wispCol = mix(vec3(1.0, 0.46, 0.08), vec3(1.0, 0.88, 0.36), k);
+          } else if (typeRoll < 0.75) {
+            // Cyan supernatural spirit wisp
+            wispCol = mix(vec3(0.08, 0.65, 0.88), vec3(0.65, 0.95, 1.0), k);
+          } else {
+            // Electric violet spectral mote
+            wispCol = mix(vec3(0.68, 0.16, 0.92), vec3(0.92, 0.58, 1.0), k);
+          }
+          gColor = vec4(wispCol * (0.6 + 4.2 * k) * vB, 1.0);
           gNormal = vec4(0.5, 0.5, 0.0, -1.0);
         }`,
     });

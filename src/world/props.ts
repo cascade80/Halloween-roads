@@ -1098,6 +1098,143 @@ export function cemeteryFence(length: number, seed: number): Geo {
   return merge(out);
 }
 
+const LEAF_COLORS = ["#c42028", "#e66214", "#d89814", "#661226", "#986814", "#ee781c", "#8c1622"];
+
+/**
+ * Cluster of fallen autumn leaves scattered on the road verge, curb, or building stoop.
+ */
+export function autumnLeafCluster(seed: number): Geo {
+  const r = mulberry32(seed);
+  const out: Geo[] = [];
+  const count = range(r, 8, 14);
+  for (let i = 0; i < count; i++) {
+    const col = LEAF_COLORS[Math.floor(r() * LEAF_COLORS.length)];
+    const lw = range(r, 0.08, 0.16);
+    const lh = range(r, 0.07, 0.14);
+    const leaf = box(lw, 0.005, lh, col, M.plain);
+    leaf.rotateY(r() * Math.PI * 2);
+    leaf.rotateX(range(r, -0.15, 0.15));
+    leaf.rotateZ(range(r, -0.15, 0.15));
+    const rad = Math.sqrt(r()) * 0.45;
+    const ang = r() * Math.PI * 2;
+    leaf.translate(Math.cos(ang) * rad, 0.004, Math.sin(ang) * rad);
+    out.push(leaf);
+  }
+  return merge(out);
+}
+
+/**
+ * Traditional Japanese hanging paper lantern (chochin) with dark wooden caps and warm interior light.
+ */
+export function hangingLantern(color = "#f05a18"): Geo {
+  const out: Geo[] = [];
+  // Hanging cord / hook
+  out.push(xf(cyl(0.008, 0.008, 0.22, "#1c1814", M.plain, 5), 0, 0.22, 0));
+  // Top dark wooden cap
+  out.push(xf(cyl(0.12, 0.14, 0.04, "#1c1814", M.plain, 10), 0, 0.11, 0));
+  // Glowing paper lantern body
+  const body = prep(new THREE.CylinderGeometry(0.14, 0.14, 0.32, 12, 1), color, M.fire);
+  body.scale(1.0, 1.0, 0.95);
+  xf(body, 0, -0.06, 0);
+  out.push(body);
+  // Bottom wooden cap & tassel
+  out.push(xf(cyl(0.13, 0.11, 0.04, "#1c1814", M.plain, 10), 0, -0.24, 0));
+  out.push(xf(cyl(0.015, 0.005, 0.12, color, M.cloth, 5), 0, -0.31, 0));
+  return merge(out);
+}
+
+/**
+ * Suspended street festival lantern garland: sagging cable with 4-5 multi-colored glowing paper lanterns.
+ */
+export function lanternString(length: number, seed: number): Geo {
+  const r = mulberry32(seed);
+  const out: Geo[] = [];
+  const nLanterns = 4;
+  const cols = ["#ee5812", "#d62024", "#e87a14", "#8c28cc", "#f2a818"];
+
+  // Suspension wire
+  const wirePts: THREE.Vector3[] = [];
+  const segs = 14;
+  for (let i = 0; i <= segs; i++) {
+    const t = i / segs;
+    const x = -length / 2 + t * length;
+    const y = -Math.sin(t * Math.PI) * 0.35;
+    wirePts.push(V(x, y, 0));
+  }
+  for (let i = 0; i < segs; i++) {
+    out.push(beam(wirePts[i], wirePts[i + 1], 0.006, "#1a1816", M.metal, 4));
+  }
+
+  // Lanterns along the wire
+  for (let i = 1; i <= nLanterns; i++) {
+    const t = i / (nLanterns + 1);
+    const x = -length / 2 + t * length;
+    const y = -Math.sin(t * Math.PI) * 0.35;
+    const col = cols[(i + Math.floor(r() * 3)) % cols.length];
+    const l = hangingLantern(col);
+    l.scale(0.85, 0.85, 0.85);
+    l.translate(x, y - 0.1, range(r, -0.04, 0.04));
+    out.push(l);
+  }
+
+  return merge(out);
+}
+
+/**
+ * Supernatural spectral flame teardrop burning atop gravestones, lanterns, or shrines.
+ */
+export function spectralFlame(color = "#a832ff", scale = 1.0): Geo {
+  const out: Geo[] = [];
+  // Teardrop flame: small squashed sphere base with tapered cone flame tip
+  const base = sphere(0.08 * scale, color, M.fire, 8, 6);
+  base.scale(1.0, 1.4, 0.9);
+  base.translate(0, 0.08 * scale, 0);
+  out.push(base);
+
+  const tip = prep(new THREE.ConeGeometry(0.075 * scale, 0.18 * scale, 8), color, M.fire);
+  tip.translate(0, 0.20 * scale, 0);
+  out.push(tip);
+
+  // Outer ethereal aura
+  const aura = sphere(0.12 * scale, color, M.fire, 6, 5);
+  aura.scale(0.9, 1.6, 0.9);
+  aura.translate(0, 0.12 * scale, 0);
+  out.push(aura);
+
+  return merge(out);
+}
+
+/**
+ * Glowing supernatural festival rune painted on the asphalt shoulder.
+ */
+export function roadRune(seed: number): Geo {
+  const r = mulberry32(seed);
+  const out: Geo[] = [];
+  const col = r() < 0.5 ? "#00e5ff" : "#ffaa18";
+  const rad = range(r, 0.65, 0.95);
+  // Outer glowing ring
+  const ring = prep(new THREE.RingGeometry(rad * 0.88, rad, 16), col, M.glow);
+  ring.rotateX(-Math.PI / 2);
+  ring.translate(0, 0.015, 0);
+  out.push(ring);
+
+  // Inner hexagram / occult star markings
+  const innerStar = prep(new THREE.RingGeometry(rad * 0.35, rad * 0.45, 8), col, M.glow);
+  innerStar.rotateX(-Math.PI / 2);
+  innerStar.translate(0, 0.016, 0);
+  out.push(innerStar);
+
+  // Cross axes
+  const b1 = box(rad * 1.6, 0.005, 0.035, col, M.glow);
+  xf(b1, 0, 0.016, 0);
+  out.push(b1);
+  const b2 = box(0.035, 0.005, rad * 1.6, col, M.glow);
+  xf(b2, 0, 0.016, 0);
+  out.push(b2);
+
+  return merge(out);
+}
+
 
 /**
  * Tall shadowy watcher figure standing motionless deep among the trees.

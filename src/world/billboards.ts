@@ -518,16 +518,16 @@ export class BillboardSystem {
     canvas.height = 720;
     const ctx = canvas.getContext("2d")!;
 
-    // Common dark cyber/horror background gradient
+    // Midnight Halloween gradient
     const grad = ctx.createLinearGradient(0, 0, 1280, 720);
-    grad.addColorStop(0, "#081018");
-    grad.addColorStop(0.5, "#0d1b2a");
-    grad.addColorStop(1, "#050b12");
+    grad.addColorStop(0, "#080414");
+    grad.addColorStop(0.5, "#140924");
+    grad.addColorStop(1, "#06030e");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 1280, 720);
 
-    // Weathered grid lines
-    ctx.strokeStyle = "rgba(72, 140, 190, 0.12)";
+    // Weathered grid lines with subtle violet tint
+    ctx.strokeStyle = "rgba(140, 72, 210, 0.14)";
     ctx.lineWidth = 1;
     for (let x = 0; x < 1280; x += 64) {
       ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 720); ctx.stroke();

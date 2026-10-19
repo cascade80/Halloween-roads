@@ -12,15 +12,18 @@ export { BIKE, PARK_LEAN, PARK_STEER } from "./bike";
  * forward = -Z, up = +Y, right = +X. Hierarchy: root (world pos, yaw) → lean (roll) → bike, body.
  */
 
-const SKIN = "#6b8274";
-const HAIR = "#101210";
-const PANTS = "#141c2c";
-const SHORTS = "#141c2c";
-const SHIRT = "#4f8eb8";
+const SKIN = "#506054";
+const HAIR = "#180f24";
+const HOODIE_DARK = "#16131c";
+const HOODIE_ACCENT = "#5c1b3e";
+const HOODIE_CREST = "#ff7a12";
+const PANTS = "#121016";
+const SHORTS = "#121016";
+const SHIRT = HOODIE_DARK;
 const BLOUSE = SHIRT;
-const SKIRT = "#141c2c";
-const SOCK = "#141c2c";
-const SHOE = "#0e1012";
+const SKIRT = "#1a1422";
+const SOCK = "#20162a";
+const SHOE = "#0c0a10";
 
 const V = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
@@ -1047,43 +1050,46 @@ export class Rider {
         p1.x, p1.y, p1.z,  p3.x, p3.y, p3.z,  p4.x, p4.y, p4.z,
       ], 3));
       leftCollar.computeVertexNormals();
-      collarParts.push(prep(leftCollar, "#467d9e", M.cloth));
+      collarParts.push(prep(leftCollar, HOODIE_ACCENT, M.cloth));
 
-      // Right collar leaf (pointed triangular flap folded over front right chest)
+      // Right collar leaf (hoodie draw-lapel)
       const rightCollar = new THREE.BufferGeometry();
       const q1 = torsoPt(0.012, 0.468, -1, 0.0035);
       const q2 = torsoPt(0.055, 0.462, -1, 0.0035);
-      const q3 = torsoPt(0.046, 0.405, -1, 0.004); // collar tip
+      const q3 = torsoPt(0.046, 0.405, -1, 0.004);
       const q4 = torsoPt(0.006, 0.442, -1, 0.0035);
       rightCollar.setAttribute("position", new THREE.Float32BufferAttribute([
         q1.x, q1.y, q1.z,  q3.x, q3.y, q3.z,  q2.x, q2.y, q2.z,
         q1.x, q1.y, q1.z,  q4.x, q4.y, q4.z,  q3.x, q3.y, q3.z,
       ], 3));
       rightCollar.computeVertexNormals();
-      collarParts.push(prep(rightCollar, "#467d9e", M.cloth));
+      collarParts.push(prep(rightCollar, HOODIE_ACCENT, M.cloth));
 
       tp.add(new THREE.Mesh(merge(collarParts), uber(rid, 1, THREE.DoubleSide)));
     }
 
-    // Central button placket for boy's button-up shirt
-    this.add(torsoStrip([[0, 0.44], [0, 0.36], [0, 0.28], [0, 0.20], [0, SKIRT_WAIST_Y + 0.015]], -1, 0.0018, 0.010, 0.010, "#3d7396", 0.0012), tp, rid);
+    // Central zipper strip in deep burgundy
+    this.add(torsoStrip([[0, 0.44], [0, 0.36], [0, 0.28], [0, 0.20], [0, SKIRT_WAIST_Y + 0.015]], -1, 0.002, 0.014, 0.014, HOODIE_ACCENT, 0.0012), tp, rid);
 
-    // Dried blood & rot stains dripping down the front of the sky blue shirt
-    this.add(torsoPatch(-0.065, 0.035, 0.30, 0.46, -1, 0.002, "#200608", 8, 4), tp, rid);
-    this.add(torsoPatch(0.01, 0.075, 0.22, 0.36, -1, 0.002, "#180406", 8, 4), tp, rid);
-    this.add(torsoStrip([[0.012, 0.45], [0.016, 0.38], [0.01, 0.28], [0.006, 0.18]], -1, 0.0022, 0.004, 0.002, "#160305", 0.001), tp, rid);
-    this.add(torsoStrip([[-0.035, 0.43], [-0.03, 0.35], [-0.032, 0.26]], -1, 0.0022, 0.003, 0.0015, "#160305", 0.001), tp, rid);
-    // Severe gory claw tear on the shoulder
-    this.add(torsoPatch(0.04, 0.11, 0.38, 0.45, -1, 0.0025, "#120204", 6, 3), tp, rid);
+    // Glowing Jack-o'-Lantern / Halloween crest patch on left chest
     {
-      const btn: THREE.BufferGeometry[] = [];
-      for (const y of [0.38, 0.31, 0.24, 0.17]) {
-        const p = torsoPt(0, y, -1, 0.0022), q = torsoPt(0, y, -1, 0.01);
-        const bg = new THREE.CylinderGeometry(0.0042, 0.0042, 0.0018, 10);
-        bg.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(V(0, 1, 0), q.sub(p).normalize()));
-        btn.push(prep(bg.translate(p.x, p.y, p.z), "#1c242c", M.plain));
-      }
-      tp.add(new THREE.Mesh(merge(btn), uber(rid, 0.5)));
+      const crestParts: THREE.BufferGeometry[] = [];
+      const cp = torsoPt(-0.045, 0.35, -1, 0.004);
+      // Small carved pumpkin crest
+      crestParts.push(box(0.028, 0.024, 0.008, HOODIE_CREST, M.fire));
+      // Carved crest eyes & grin
+      const ce1 = box(0.005, 0.005, 0.01, "#160602", M.plain);
+      ce1.rotateZ(0.3);
+      ce1.translate(-0.006, 0.004, 0.002);
+      const ce2 = box(0.005, 0.005, 0.01, "#160602", M.plain);
+      ce2.rotateZ(-0.3);
+      ce2.translate(0.006, 0.004, 0.002);
+      const cm = box(0.014, 0.005, 0.01, "#160602", M.plain);
+      cm.translate(0, -0.005, 0.002);
+      crestParts.push(ce1, ce2, cm);
+      const cg = merge(crestParts);
+      xf(cg, cp.x, cp.y, cp.z);
+      tp.add(new THREE.Mesh(cg, uber(rid, 1)));
     }
 
     // Straight boy shirt sleeves (no puffed shoulders or ballooning gathers):
@@ -1107,17 +1113,17 @@ export class Rider {
       tube.computeVertexNormals();
       const tm = new THREE.Mesh(prep(tube, SHIRT, M.cloth), uber(rid, 1, THREE.DoubleSide));
       sg.add(tm);
-      // Clean straight shirt sleeve hem
-      const cuff = prep(new THREE.CylinderGeometry(0.0525, 0.0515, 0.012, 16, 1, true), "#3a6888", M.cloth);
+      // Straight hoodie sleeve cuffs
+      const cuff = prep(new THREE.CylinderGeometry(0.0525, 0.0515, 0.012, 16, 1, true), HOODIE_ACCENT, M.cloth);
       cuff.translate(0, 0.124, 0);
       const cm = new THREE.Mesh(cuff, uber(rid, 1));
       sg.add(cm);
       this.fppKeep.push(tm, cm);
     }
 
-    // Neck: slim, leaning slightly forward, entering the head behind the chin.
+    // Neck: dark hoodie collar band entering under the pumpkin head
     {
-      const neck = new Limb(tp, [0.036, 0.031, 0.028, 0.027], SKIN, M.skin, ID.skin);
+      const neck = new Limb(tp, [0.038, 0.033, 0.030, 0.029], HOODIE_DARK, M.cloth, rid);
       neck.mesh.geometry.scale(1, 1, 0.92);
       neck.set(V(0, 0.44, 0.012), V(0, 0.62, 0.006));
     }
@@ -1125,17 +1131,7 @@ export class Rider {
     this.head.scale.setScalar(HEAD_SCALE);
     this.head.name = "riderHead";
     tp.add(this.head);
-    const face = new THREE.SphereGeometry(1, 72, 54);
-    const fp = face.attributes.position;
-    const fd = new THREE.Vector3();
-    for (let i = 0; i < fp.count; i++) {
-      fd.fromBufferAttribute(fp, i).normalize();
-      fd.multiplyScalar(faceR(fd));
-      fp.setXYZ(i, fd.x, fd.y, fd.z);
-    }
-    this.add(prep(weld(face), SKIN, M.skin), this.head, ID.skin);
-    this.buildFace();
-    this.buildHair();
+    this.buildPumpkinHead();
     this.buildLimbs();
     this.drapeSkirt(0, 0);
   }
@@ -1175,6 +1171,130 @@ export class Rider {
    * painted strokes excluded from the ink pass, so only the silhouette carries the outline. Each
    * eye sits in its own group so it can blink.
    */
+  /**
+   * Stylized 3D carved pumpkin head for the Pumpkin Rider protagonist.
+   * Naturally ribbed lobes, twisted stem on top, sinister carved glowing eyes and jagged smile (M.fire),
+   * inner cavity with warm golden flame core, and tattered fluttering burgundy neck cowl.
+   */
+  private buildPumpkinHead(): void {
+    const PUMPKIN_BASE = "#ea6416";
+    const PUMPKIN_DARK = "#bd4808";
+    const PUMPKIN_GLOW = "#ffaa14";
+
+    const parts: THREE.BufferGeometry[] = [];
+
+    // 1. Ribbed pumpkin body: 8 radial lobes around the central vertical axis
+    const nLobes = 8;
+    for (let i = 0; i < nLobes; i++) {
+      const a = (i / nLobes) * Math.PI * 2;
+      const lobe = sphere(0.056, i % 2 === 0 ? PUMPKIN_BASE : PUMPKIN_DARK, M.plain, 12, 10);
+      lobe.scale(1.0, 1.62, 1.0);
+      const dist = 0.072;
+      lobe.translate(Math.sin(a) * dist, 0.015, -Math.cos(a) * dist);
+      parts.push(lobe);
+    }
+    // Smooth central mass connecting all lobes
+    const centerCore = sphere(0.108, PUMPKIN_BASE, M.plain, 20, 16);
+    centerCore.scale(1.12, 0.88, 1.08);
+    centerCore.translate(0, 0.015, 0);
+    parts.push(centerCore);
+
+    // 2. Twisted, gnarled stem on top
+    const stem0 = V(0, 0.105, 0);
+    const stem1 = V(0.014, 0.155, 0.008);
+    const stem2 = V(0.032, 0.185, -0.016);
+    parts.push(beam(stem0, stem1, 0.02, "#2e3b1c", M.bark, 6, 0.014));
+    parts.push(beam(stem1, stem2, 0.014, "#1d2810", M.bark, 6, 0.008));
+
+    // 3. Glowing carved eyes (-Z is front in head-local space)
+    const faceZ = -0.114;
+    const eyeY = 0.032;
+    this.eyes.length = 0;
+
+    for (const s of [1, -1]) {
+      const eyeGrp = new THREE.Group();
+      eyeGrp.position.set(s * 0.036, eyeY, faceZ);
+      this.head.add(eyeGrp);
+      this.eyes.push(eyeGrp);
+
+      const eyeBox = box(0.026, 0.022, 0.035, PUMPKIN_GLOW, M.fire);
+      eyeBox.rotateZ(s * -0.35);
+      eyeGrp.add(new THREE.Mesh(eyeBox, uber(ID.rider, 0)));
+    }
+
+    // Glowing carved triangular nose
+    const nose = box(0.016, 0.016, 0.035, PUMPKIN_GLOW, M.fire);
+    xf(nose, 0, eyeY - 0.022, faceZ - 0.004);
+    parts.push(nose);
+
+    // Jagged toothy grin
+    const mouthY = -0.034;
+    const mouthCenter = box(0.072, 0.022, 0.035, PUMPKIN_GLOW, M.fire);
+    xf(mouthCenter, 0, mouthY, faceZ);
+    parts.push(mouthCenter);
+
+    const leftCorner = box(0.026, 0.016, 0.035, PUMPKIN_GLOW, M.fire);
+    leftCorner.rotateZ(-0.4);
+    xf(leftCorner, 0.042, mouthY + 0.01, faceZ + 0.005);
+    parts.push(leftCorner);
+
+    const rightCorner = box(0.026, 0.016, 0.035, PUMPKIN_GLOW, M.fire);
+    rightCorner.rotateZ(0.4);
+    xf(rightCorner, -0.042, mouthY + 0.01, faceZ + 0.005);
+    parts.push(rightCorner);
+
+    // Carved teeth tabs (upper and lower pointed teeth)
+    const toothU1 = box(0.010, 0.010, 0.04, PUMPKIN_BASE, M.plain);
+    xf(toothU1, -0.016, mouthY + 0.008, faceZ + 0.002);
+    parts.push(toothU1);
+    const toothU2 = box(0.010, 0.010, 0.04, PUMPKIN_BASE, M.plain);
+    xf(toothU2, 0.016, mouthY + 0.008, faceZ + 0.002);
+    parts.push(toothU2);
+    const toothD1 = box(0.009, 0.009, 0.04, PUMPKIN_BASE, M.plain);
+    xf(toothD1, 0, mouthY - 0.008, faceZ + 0.002);
+    parts.push(toothD1);
+
+    // 4. Inner glowing flame core that shines from inside
+    const innerFlame = sphere(0.065, "#ff7700", M.fire, 8, 6);
+    innerFlame.translate(0, 0.01, -0.015);
+    parts.push(innerFlame);
+
+    // 5. Downward warm amber light spill ring onto neck/handlebars
+    const spillRing = prep(new THREE.CylinderGeometry(0.055, 0.085, 0.025, 12, 1, true), "#ff8812", M.fire);
+    spillRing.translate(0, -0.075, -0.015);
+    parts.push(spillRing);
+
+    // 6. Burgundy neck scarf cowl wrapped under the pumpkin base
+    const cowl = prep(new THREE.TorusGeometry(0.072, 0.022, 8, 16), HOODIE_ACCENT, M.cloth);
+    cowl.rotateX(Math.PI / 2);
+    cowl.translate(0, -0.072, 0.004);
+    parts.push(cowl);
+
+    // Add main pumpkin geometry to head
+    const pumpkinMesh = new THREE.Mesh(merge(parts), uber(ID.rider, 1));
+    this.head.add(pumpkinMesh);
+
+    // 7. Trailing tattered scarf ribbons that flutter in the wind with riding speed
+    for (const s of [-1, 1]) {
+      const ribbonGrp = new THREE.Group();
+      ribbonGrp.position.set(s * 0.038, -0.075, 0.06);
+      this.head.add(ribbonGrp);
+
+      const ribbonG = box(0.024, 0.006, 0.16, HOODIE_ACCENT, M.cloth);
+      ribbonG.translate(0, 0, 0.08);
+      ribbonGrp.add(new THREE.Mesh(ribbonG, uber(ID.rider, 1)));
+
+      this.fringe.push({
+        g: ribbonGrp,
+        radial: V(s * 0.3, 0, 1).normalize(),
+        side: V(1, 0, 0),
+        gain: 1.2,
+        ph: s * 1.5,
+        long: 1,
+      });
+    }
+  }
+
   private buildFace(): void {
     const EYE_X = 0.043, EYE_Y = -0.012;
     const [EYE_AZ, EYE_EL] = faceAt(EYE_X, EYE_Y);
@@ -1840,13 +1960,13 @@ export class Rider {
   /** World-space eye point (between the eyes, slightly forward). */
   eyeWorld(out: THREE.Vector3): THREE.Vector3 {
     this.head.updateWorldMatrix(true, false);
-    return out.set(0, -0.003, -0.061).applyMatrix4(this.head.matrixWorld);
+    return out.set(0, 0.032, -0.114).applyMatrix4(this.head.matrixWorld);
   }
 
   /** World-space point at the middle of her head (orbit-camera pivot). */
   headWorld(out: THREE.Vector3): THREE.Vector3 {
     this.head.updateWorldMatrix(true, false);
-    return out.set(0, 0, 0).applyMatrix4(this.head.matrixWorld);
+    return out.set(0, 0.015, 0).applyMatrix4(this.head.matrixWorld);
   }
 
   update(dt: number, s: RiderState, f?: FootState): void {

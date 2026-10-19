@@ -602,11 +602,11 @@ void main(){
     gColor = vec4(vec3(1.0, 0.9, 0.62) * 1.02 * uWorldTint, 1.0);
     gNormal = vec4(0.5, 0.5, uId / 32.0, -1.0);
     return;
-  } else if ((HAS(31) && mt == 31)) {    // stone-lantern fire box: dark by day, a warm flame at dusk
-    gEmit = vec3(1.0, 0.58, 0.24) * uNight * 2.2;
+  } else if ((HAS(31) && mt == 31)) {    // stone-lantern fire / jack-o'-lantern flame / supernatural spectral lights
+    gEmit = (base * 2.6 + vec3(0.2, 0.12, 0.05)) * uNight * 2.2;
   } else if ((HAS(30) && mt == 30)) {    // lamp / vending / sign panel: plain paint by day, lit at night
     paint = 0.3; rim = 0.5;
-    gEmit = mix(base, vec3(1.0, 0.93, 0.8), 0.35) * uNight * 1.3;
+    gEmit = mix(base, vec3(1.0, 0.93, 0.8), 0.35) * uNight * 1.5;
   } else if ((HAS(19) && mt == 19)) {    // painted distant mountains: authored colour, soft top-lit gradient
     float h = clamp(vObj.y / 160.0, 0.0, 1.0);
     vec3 c = base * (0.9 + 0.18 * h) * (0.94 + 0.12 * brush(vWPos * 0.05, N));
