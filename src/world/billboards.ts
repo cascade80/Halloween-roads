@@ -133,6 +133,7 @@ export class BillboardSystem {
   private textures: THREE.Texture[] = [];
   private frameMaterial: THREE.ShaderMaterial;
   private lampMaterial: THREE.ShaderMaterial;
+  private bannerTexture: THREE.Texture | null = null;
   private textureLoader = new THREE.TextureLoader();
 
   constructor() {
@@ -184,20 +185,42 @@ export class BillboardSystem {
     lampHeadGeo.rotateX(Math.PI / 2);
     const bulbGeo = new THREE.SphereGeometry(0.14, 8, 8);
 
+    // Load custom uploaded banner for all hoardings
+    const baseUrl = (import.meta as unknown as { env?: { BASE_URL?: string } }).env?.BASE_URL ?? "./";
+    const bannerUrl = `${baseUrl}wide_cinematic_cyberpunk_hacker_themed_banner_co.png`;
+    this.bannerTexture = this.textureLoader.load(
+      bannerUrl,
+      (loaded) => {
+        loaded.colorSpace = THREE.SRGBColorSpace;
+        loaded.minFilter = THREE.LinearMipmapLinearFilter;
+        loaded.magFilter = THREE.LinearFilter;
+        loaded.generateMipmaps = true;
+        loaded.anisotropy = 8;
+        loaded.needsUpdate = true;
+        this.materials.forEach((mat) => {
+          mat.uniforms.uTexture.value = loaded;
+        });
+      },
+      undefined,
+      (err) => {
+        console.warn("[BillboardSystem] Could not load banner image, falling back to procedural posters:", err);
+      }
+    );
+    this.bannerTexture.colorSpace = THREE.SRGBColorSpace;
+    this.bannerTexture.minFilter = THREE.LinearMipmapLinearFilter;
+    this.bannerTexture.magFilter = THREE.LinearFilter;
+    this.bannerTexture.generateMipmaps = true;
+    this.bannerTexture.anisotropy = 8;
+
     BILLBOARD_SLOTS.forEach((slot, i) => {
       const group = new THREE.Group();
       group.name = `billboard_${i}`;
 
-      // 1. Generate default artistic poster on high-res canvas
+      // Procedural canvas poster as fallback
       const canvas = this.generateDefaultPoster(i);
       this.defaultCanvases.push(canvas);
 
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      texture.minFilter = THREE.LinearMipmapLinearFilter;
-      texture.magFilter = THREE.LinearFilter;
-      texture.generateMipmaps = true;
-      texture.anisotropy = 4;
+      const texture = this.bannerTexture ?? new THREE.CanvasTexture(canvas);
       this.textures.push(texture);
 
       // 2. Board Shader Material (Double-sided with high emissive clarity)
@@ -325,14 +348,12 @@ export class BillboardSystem {
    */
   reset(index?: number): void {
     const resetOne = (idx: number) => {
-      if (idx >= 0 && idx < this.defaultCanvases.length) {
-        const defaultTex = new THREE.CanvasTexture(this.defaultCanvases[idx]);
-        defaultTex.colorSpace = THREE.SRGBColorSpace;
-        defaultTex.minFilter = THREE.LinearMipmapLinearFilter;
-        defaultTex.magFilter = THREE.LinearFilter;
-        defaultTex.generateMipmaps = true;
-        this.materials[idx].uniforms.uTexture.value = defaultTex;
-        this.textures[idx] = defaultTex;
+      if (idx >= 0 && idx < this.materials.length) {
+        const tex = this.bannerTexture ?? (this.defaultCanvases[idx] ? new THREE.CanvasTexture(this.defaultCanvases[idx]) : null);
+        if (tex) {
+          this.materials[idx].uniforms.uTexture.value = tex;
+          this.textures[idx] = tex;
+        }
       }
     };
 
