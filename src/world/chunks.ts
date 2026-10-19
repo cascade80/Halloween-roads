@@ -87,17 +87,9 @@ const SIGNS = [
   { z: -560, kind: 2 },
 ];
 
-const FENCES_LEFT: [number, number][] = [
-  [-6, -118],
-  [-176, -252],
-  [-398, -470],
-  [-590, -628],
-];
+const FENCES_LEFT: [number, number][] = [];
 
-const GUARDRAIL_RIGHT: [number, number][] = [
-  [-156, -180],
-  [-452, -486],
-];
+const GUARDRAIL_RIGHT: [number, number][] = [];
 
 const inVillage = (z: number) => HOUSES.some((h) => z < h.z + h.d / 2 + 5 && z > h.z - h.d / 2 - 2.5);
 /** Keep sightlines to the houses open: no big roadside trees just before a cluster. */
@@ -498,14 +490,6 @@ export function buildChunk(k: number): Chunk {
           }
         }
       }
-      // Bamboo fence on some inner berms.
-      if (rr === 1 && pnoise(0, za, 11) > 0.6) {
-        for (const g of fence(COL_P - 2, 0.9, "#b4a068", c * 13 + rr, false)) {
-          g.rotateY(Math.PI / 2);
-          g.translate(uIn, top, za - 1);
-          fenceG.push(shear(g));
-        }
-      }
     }
   }
   // Far fields beyond the terraces.
@@ -562,27 +546,6 @@ export function buildChunk(k: number): Chunk {
     stoopLeaves.translate(0, 0.01, h.d * 0.52 + 0.3);
     infraG.push(placeAt(stoopLeaves, h.u + h.w / 2, h.z, houseYaw, houseY));
   }
-  // Obstacles that sit inside the guide rails (reachable by steering, clear of the autoplay line
-  // which holds ~0.85 m left of centre): post box and stone marker at the road edge, a pole
-  // standing on the asphalt shoulder as rural Japanese poles often do.
-  const obstacle = (g: Geo, u: number, z: number, ry: number, rad: number) => {
-    if (!inRange(z)) return;
-    infraG.push(placeAt(g, u, z, ry));
-    colliders.push({ x: roadX(z) + u, z, r: rad });
-  };
-  // Collider radius = visual half-size + ~0.1 m so nothing ever overlaps the rider.
-  obstacle(postBox(), 2.55, SHOP_Z + 5.5, faceRoadFromRight(SHOP_Z + 5.5), 0.45);
-  obstacle(stoneMarker(), 2.5, -140, faceRoadFromRight(-140), 0.3);
-  obstacle(stoneMarker(), -4.05, -205, faceRoadFromRight(-205) + Math.PI, 0.3);
-  if (inRange(-300)) {
-    const ep = pole(8.2, false);
-    obstacle(ep.geo, 2.6, -300, roadYaw(-300), 0.26);
-  }
-  if (inRange(-380)) {
-    const ep = pole(8.2, true);
-    obstacle(ep.geo, -2.65, -380, roadYaw(-380), 0.26);
-  }
-
   // Cross-street festival lantern strings spanning across the roadway
   if (inRange(-112)) {
     const ls = lanternString(7.8, 1120);
@@ -603,14 +566,6 @@ export function buildChunk(k: number): Chunk {
     for (const [lx, lz, rad] of solid) colliders.push({ x: roadX(z) + u + lx * c + lz * sn, z: z - lx * sn + lz * c, r: rad });
   };
   const toRoad = faceRoadFromRight;
-  // Shop row (z -96..-140): canal with bridge plates, bikes, vending machines, phone box, bus stop.
-  if (z0 > -140 && z1 < -96) {
-    const len = 36, cz = -97;
-    const canal = drainCanal(len, Math.round(len / 2));
-    canal.translate(3.55, 0, cz);
-    infraG.push(shear(canal));
-    for (const pz of [-100.8, -110.4, -119.6]) put(bridgePlate(), 3.55, pz, roadYaw(pz));
-  }
   put(parkedBike("#3a7ac8"), 4.35, -102.3, toRoad(-102.3), [[0, 0.3, 0.3], [0, -0.3, 0.3]]);
   put(parkedBike("#d8d4c8"), 4.45, -103.2, toRoad(-103.2) + 0.15, [[0, 0.3, 0.3], [0, -0.3, 0.3]]);
   put(vendingMachine("vendDrink"), 4.6, -108.4, toRoad(-108.4), [[0, 0, 0.55]]);
@@ -754,16 +709,6 @@ export function buildChunk(k: number): Chunk {
       const pg = jackOLantern(Math.floor(gr() * 1e5));
       infraG.push(placeAt(pg, pu, z, toRoad(z) + range(gr, -0.4, 0.4), groundH(pu, z) + 0.01));
     }
-    // Wrought-iron spiked cemetery fences along select right-side verge stretches
-    if (gr() < 0.6) {
-      const fz = z0 - range(gr, 20, 50);
-      const flen = range(gr, 8, 14);
-      if (inRange(fz) && inRange(fz - flen) && !inHouse(4.4, fz, 0.6)) {
-        const fg = cemeteryFence(flen, Math.floor(gr() * 1e5));
-        infraG.push(placeAt(fg, 4.4, fz - flen / 2, roadYaw(fz - flen / 2)));
-      }
-    }
-
     // 3. Left Side Graveyard & Roadside Berm (u in [-18.0, -4.6 m])
     for (let z = z0 - 3; z > z1 + 3; z -= range(gr, 3.8, 6.2)) {
       // Keep clear of the billboard hoarding frame (which sits at u = -7.0, z in [billboardSlotZ - 6.5, billboardSlotZ + 6.5])
@@ -916,29 +861,7 @@ export function buildChunk(k: number): Chunk {
     colliders.push({ x: roadX(s.z) + 3.3, z: s.z, r: 0.15 });
   }
 
-  // ---- fences
-  for (const [fa, fb] of FENCES_LEFT) {
-    const a = Math.min(z0, fa), b = Math.max(z1, fb);
-    if (a <= b) continue;
-    for (const g of fence(a - b, 1.05, "#8a7254", Math.round(a), true)) {
-      g.rotateY(Math.PI / 2);
-      g.translate(-4.3, 0, a);
-      fenceG.push(shear(g));
-    }
-  }
-  for (const [fa, fb] of GUARDRAIL_RIGHT) {
-    const a = Math.min(z0, fa), b = Math.max(z1, fb);
-    if (a <= b) continue;
-    const len = a - b;
-    const n = Math.round(len / 2);
-    for (let i = 0; i <= n; i++) {
-      const z = a - (i / n) * len;
-      infraG.push(xf(prep(new THREE.CylinderGeometry(0.06, 0.06, 0.85, 8), "#a2a098", M.metal), roadX(z) + 3.25, 0.42, z));
-    }
-    const rail = prep(new THREE.BoxGeometry(0.06, 0.32, len, 1, 2, Math.max(1, Math.round(len / 2))), "#a8a69e", M.metal);
-    rail.translate(3.18, 0.66, a - len / 2);
-    infraG.push(shear(rail));
-  }
+
 
   // ---- trees
   const trees: Record<string, Inst> = {};

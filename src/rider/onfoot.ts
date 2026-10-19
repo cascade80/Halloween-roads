@@ -53,8 +53,6 @@ interface Ground {
 export function groundAt(u: number, z: number): Ground | null {
   if (u > U_MAX || u < U_FAR - 0.45) return null;
   const zc = canon(z);
-  for (const [a, b] of FENCES_LEFT) if (zc <= a + 0.05 && zc >= b - 0.05 && Math.abs(u + 4.27) < 0.2) return null;
-  for (const [a, b] of GUARDRAIL_RIGHT) if (zc <= a + 0.05 && zc >= b - 0.05 && Math.abs(u - 3.22) < 0.17) return null;
   if (u >= -4.55) {
     const au = Math.abs(u);
     const h = au < RIBBON_HALF ? 0.02 : groundH(u, zc);
