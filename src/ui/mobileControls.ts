@@ -10,6 +10,7 @@ export class MobileControls {
   private mountBtn: HTMLButtonElement;
   private sprintBtn: HTMLButtonElement;
   private bellBtn: HTMLButtonElement;
+  private moneyBtn: HTMLButtonElement;
   private pauseBtn: HTMLButtonElement;
 
   private activeTouchId: number | null = null;
@@ -26,6 +27,7 @@ export class MobileControls {
     private chase: ChaseCam,
     private pause: Pause,
     private onRingBell: () => void,
+    private onCheckMoney?: () => void,
   ) {
     this.injectStyles();
 
@@ -73,6 +75,19 @@ export class MobileControls {
       this.onRingBell();
     });
 
+    this.moneyBtn = document.createElement("button");
+    this.moneyBtn.className = "th-m-btn th-money-btn";
+    this.moneyBtn.style.display = "none";
+    this.moneyBtn.style.background = "linear-gradient(135deg, #1e3a5f, #0d5c75)";
+    this.moneyBtn.style.borderColor = "#48cae4";
+    this.moneyBtn.innerHTML = `<span>$ RATES</span>`;
+    this.moneyBtn.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.onCheckMoney?.();
+    });
+
+    buttonCluster.appendChild(this.moneyBtn);
     buttonCluster.appendChild(this.mountBtn);
     buttonCluster.appendChild(this.sprintBtn);
     buttonCluster.appendChild(this.bellBtn);
@@ -314,5 +329,11 @@ export class MobileControls {
 
   private setKnobOffset(x: number, y: number): void {
     this.joystickKnob.style.transform = `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`;
+  }
+
+  setMoneyButtonVisible(visible: boolean): void {
+    if (this.moneyBtn) {
+      this.moneyBtn.style.display = visible ? "flex" : "none";
+    }
   }
 }

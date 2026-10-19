@@ -855,6 +855,250 @@ export function graveStone(seed: number): Geo {
   return g;
 }
 
+const PUMPKIN_COLS = ["#cf520e", "#bd4606", "#dc6316", "#c24c08", "#a83e04"];
+const PUMPKIN_GLOW = ["#ffaa18", "#ff9300", "#ffba30"];
+
+/**
+ * Carved glowing Halloween Jack-o'-Lantern with warm emissive flame face.
+ * Emits glowing light at night in the toon shader via M.fire.
+ */
+export function jackOLantern(seed: number): Geo {
+  const r = mulberry32(seed);
+  const out: Geo[] = [];
+  const col = PUMPKIN_COLS[Math.floor(r() * PUMPKIN_COLS.length)];
+  const glowCol = PUMPKIN_GLOW[Math.floor(r() * PUMPKIN_GLOW.length)];
+  const rad = range(r, 0.22, 0.32);
+  const squishY = range(r, 0.72, 0.82);
+
+  // Ribbed body: 3 overlapping squashed ellipsoids rotated around Y
+  for (let i = 0; i < 3; i++) {
+    const s = sphere(rad, col, M.plain, 12, 10);
+    s.scale(1.08, squishY, 0.94);
+    s.rotateY((i * Math.PI) / 3);
+    s.translate(0, rad * squishY, 0);
+    out.push(s);
+  }
+
+  // Dark crooked stem on top
+  const stemH = rad * 0.45;
+  const stem = cyl(0.035 * (rad / 0.25), 0.05 * (rad / 0.25), stemH, "#2e3b1c", M.bark, 6);
+  stem.rotateZ(range(r, 0.15, 0.35));
+  stem.rotateY(r() * 6.28);
+  stem.translate(range(r, -0.02, 0.02), rad * squishY * 1.95 + stemH * 0.4, 0);
+  out.push(stem);
+
+  // Carved glowing sinister face on front (+Z)
+  const faceZ = rad * 0.95;
+  const eyeY = rad * squishY * 1.15;
+  const eyeSpread = rad * 0.36;
+  const eyeSz = rad * 0.22;
+
+  // Triangular glowing eyes (tilted sinister angle)
+  const leftEye = box(eyeSz, eyeSz * 0.8, 0.04, glowCol, M.fire);
+  leftEye.rotateZ(0.3);
+  xf(leftEye, -eyeSpread, eyeY, faceZ);
+  out.push(leftEye);
+
+  const rightEye = box(eyeSz, eyeSz * 0.8, 0.04, glowCol, M.fire);
+  rightEye.rotateZ(-0.3);
+  xf(rightEye, eyeSpread, eyeY, faceZ);
+  out.push(rightEye);
+
+  // Glowing triangle nose
+  const nose = box(eyeSz * 0.55, eyeSz * 0.55, 0.04, glowCol, M.fire);
+  xf(nose, 0, eyeY - rad * 0.2, faceZ + 0.02);
+  out.push(nose);
+
+  // Jagged toothy grin
+  const mouthY = rad * squishY * 0.65;
+  const mouthW = rad * 0.85;
+  const mouthH = rad * 0.2;
+  // Center grinning arc
+  out.push(xf(box(mouthW * 0.65, mouthH * 0.7, 0.04, glowCol, M.fire), 0, mouthY, faceZ + 0.02));
+  // Upturned sinister grin corners
+  const leftCorner = box(mouthW * 0.35, mouthH * 0.6, 0.04, glowCol, M.fire);
+  leftCorner.rotateZ(0.35);
+  xf(leftCorner, -mouthW * 0.38, mouthY + mouthH * 0.35, faceZ);
+  out.push(leftCorner);
+
+  const rightCorner = box(mouthW * 0.35, mouthH * 0.6, 0.04, glowCol, M.fire);
+  rightCorner.rotateZ(-0.35);
+  xf(rightCorner, mouthW * 0.38, mouthY + mouthH * 0.35, faceZ);
+  out.push(rightCorner);
+
+  // Fang teeth (top & bottom cutouts)
+  const toothSz = rad * 0.12;
+  out.push(xf(box(toothSz, toothSz * 0.9, 0.05, col, M.plain), -rad * 0.16, mouthY + mouthH * 0.25, faceZ + 0.03));
+  out.push(xf(box(toothSz, toothSz * 0.9, 0.05, col, M.plain), rad * 0.16, mouthY + mouthH * 0.25, faceZ + 0.03));
+  out.push(xf(box(toothSz * 0.9, toothSz * 0.85, 0.05, col, M.plain), 0, mouthY - mouthH * 0.25, faceZ + 0.03));
+
+  const g = merge(out);
+  // Slight random lean
+  const tilt = range(r, -0.08, 0.08);
+  if (Math.abs(tilt) > 0.01) {
+    g.rotateZ(tilt);
+    g.rotateX(tilt * 0.4);
+  }
+  return g;
+}
+
+/**
+ * Ancient weathered Celtic/Gothic stone cross monument standing in overgrown graves.
+ * Stepped plinth, vertical cross shaft, horizontal crossbeam, circular stone halo ring, moss stains.
+ */
+export function stoneCross(seed: number): Geo {
+  const r = mulberry32(seed);
+  const out: Geo[] = [];
+  const bodyCol = GRAVE_STONE_BODY[Math.floor(r() * GRAVE_STONE_BODY.length)];
+  const mossCol = GRAVE_MOSS[Math.floor(r() * GRAVE_MOSS.length)];
+
+  // Tiered pedestal base (weathered stone plinth)
+  const baseW1 = range(r, 0.65, 0.85);
+  const baseH1 = range(r, 0.12, 0.18);
+  const baseW2 = baseW1 * 0.75;
+  const baseH2 = range(r, 0.12, 0.16);
+
+  out.push(xf(box(baseW1, baseH1, baseW1, mossCol, M.stone), 0, baseH1 / 2, 0));
+  out.push(xf(box(baseW2, baseH2, baseW2, bodyCol, M.stone), 0, baseH1 + baseH2 / 2, 0));
+
+  const shaftH = range(r, 1.4, 2.0);
+  const shaftW = range(r, 0.18, 0.24);
+  const shaftT = range(r, 0.14, 0.18);
+  const armSpan = range(r, 0.7, 0.95);
+  const armY = baseH1 + baseH2 + shaftH * 0.72;
+
+  // Vertical shaft
+  out.push(xf(box(shaftW, shaftH, shaftT, bodyCol, M.stone), 0, baseH1 + baseH2 + shaftH / 2, 0));
+  // Horizontal crossbeam
+  out.push(xf(box(armSpan, shaftW, shaftT + 0.01, bodyCol, M.stone), 0, armY, 0));
+
+  // Celtic stone halo ring connecting the four cross arms
+  const ringR = armSpan * 0.32;
+  const ringGeo = prep(new THREE.TorusGeometry(ringR, shaftT * 0.22, 6, 16), bodyCol, M.stone);
+  ringGeo.translate(0, armY, 0);
+  out.push(ringGeo);
+
+  // Base moss staining creeping up
+  const stainH = shaftH * range(r, 0.15, 0.3);
+  out.push(xf(box(shaftW + 0.01, stainH, shaftT + 0.01, mossCol, M.stone), 0, baseH1 + baseH2 + stainH / 2, 0));
+
+  const g = merge(out);
+  // Weathered lean
+  const leanX = range(r, -0.07, 0.07);
+  const leanZ = range(r, -0.06, 0.06);
+  g.rotateX(leanX);
+  g.rotateZ(leanZ);
+  return g;
+}
+
+/**
+ * Ancient raised stone sarcophagus / burial crypt chest.
+ * Molded stone plinth, carved tomb chest walls, heavy sculpted lid with optional crack/shift.
+ */
+export function sarcophagus(seed: number): Geo {
+  const r = mulberry32(seed);
+  const out: Geo[] = [];
+  const bodyCol = GRAVE_STONE_BODY[Math.floor(r() * GRAVE_STONE_BODY.length)];
+  const mossCol = GRAVE_MOSS[Math.floor(r() * GRAVE_MOSS.length)];
+
+  const len = range(r, 1.8, 2.2);
+  const wid = range(r, 0.85, 1.05);
+  const bodyH = range(r, 0.55, 0.72);
+
+  // Base plinth
+  out.push(xf(box(len + 0.14, 0.12, wid + 0.14, mossCol, M.stone), 0, 0.06, 0));
+
+  // Main crypt chest box
+  out.push(xf(box(len, bodyH, wid, bodyCol, M.stone), 0, 0.12 + bodyH / 2, 0));
+
+  // Decorative corner pilasters
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) {
+      out.push(xf(box(0.12, bodyH + 0.04, 0.12, GRAVE_DARK, M.stone), sx * (len / 2 - 0.04), 0.12 + bodyH / 2, sz * (wid / 2 - 0.04)));
+    }
+  }
+
+  // Heavy sculpted stone lid
+  const lidH = 0.14;
+  const lidY = 0.12 + bodyH + lidH / 2;
+  const lid = box(len + 0.12, lidH, wid + 0.12, bodyCol, M.stone);
+
+  // In ~35% of tombs, the lid is weathered and shifted/ajar, revealing the dark void beneath
+  const ajar = r() < 0.35;
+  if (ajar) {
+    lid.rotateY(range(r, 0.08, 0.18));
+    lid.translate(range(r, 0.06, 0.12), lidY, range(r, 0.04, 0.08));
+    // Dark void inside under lid
+    out.push(xf(box(len - 0.1, 0.02, wid - 0.1, "#0b0c10", M.plain), 0, 0.12 + bodyH, 0));
+  } else {
+    lid.translate(0, lidY, 0);
+  }
+  out.push(lid);
+
+  // Optional stone cross carved on the lid
+  if (!ajar && r() < 0.6) {
+    out.push(xf(box(len * 0.55, 0.02, 0.12, GRAVE_DARK, M.stone), 0, lidY + lidH / 2 + 0.01, 0));
+    out.push(xf(box(0.12, 0.02, wid * 0.45, GRAVE_DARK, M.stone), -len * 0.08, lidY + lidH / 2 + 0.01, 0));
+  }
+
+  // In ~25% of tombs, a carved jack-o'-lantern sits directly on the tomb lid!
+  if (r() < 0.25) {
+    const p = jackOLantern(Math.floor(r() * 1e5));
+    p.scale(0.85, 0.85, 0.85);
+    p.translate(range(r, -len * 0.25, len * 0.25), lidY + lidH / 2, range(r, -wid * 0.2, wid * 0.2));
+    out.push(p);
+  }
+
+  const g = merge(out);
+  // Weathered settling
+  const sink = range(r, -0.04, 0.04);
+  g.rotateZ(sink);
+  return g;
+}
+
+/**
+ * Wrought-iron Victorian/Gothic cemetery fence with spiked spearhead finials and stone pillars.
+ */
+export function cemeteryFence(length: number, seed: number): Geo {
+  const r = mulberry32(seed);
+  const out: Geo[] = [];
+  const postSpacing = 2.4;
+  const nPosts = Math.max(2, Math.round(length / postSpacing));
+  const postCol = "#1c1e22";
+  const stoneCol = GRAVE_STONE_BODY[Math.floor(r() * GRAVE_STONE_BODY.length)];
+
+  // End / middle stone pillars with carved stone spheres
+  for (let i = 0; i <= nPosts; i++) {
+    const x = -length / 2 + (i / nPosts) * length;
+    // Pillar body
+    out.push(xf(box(0.32, 1.45, 0.32, stoneCol, M.stone), x, 0.725, 0));
+    // Pillar cap & stone finial sphere
+    out.push(xf(box(0.38, 0.08, 0.38, GRAVE_DARK, M.stone), x, 1.49, 0));
+    out.push(xf(sphere(0.12, stoneCol, M.stone, 8, 6), x, 1.64, 0));
+  }
+
+  // Spiked iron railing bars between pillars
+  const railH1 = 0.35;
+  const railH2 = 1.15;
+  out.push(xf(box(length, 0.04, 0.04, postCol, M.metal), 0, railH1, 0));
+  out.push(xf(box(length, 0.04, 0.04, postCol, M.metal), 0, railH2, 0));
+
+  // Vertical iron pickets with pointed spearheads
+  const pickets = Math.floor(length / 0.18);
+  for (let i = 0; i < pickets; i++) {
+    const x = -length / 2 + 0.12 + (i * (length - 0.24)) / pickets;
+    // Main vertical rod
+    out.push(xf(cyl(0.016, 0.016, 1.1, postCol, M.metal, 5), x, 0.72, 0));
+    // Spear point top
+    const spear = prep(new THREE.ConeGeometry(0.032, 0.14, 5), postCol, M.metal);
+    spear.translate(x, 1.34, 0);
+    out.push(spear);
+  }
+
+  return merge(out);
+}
+
+
 /**
  * Tall shadowy watcher figure standing motionless deep among the trees.
  * Subtle, eerie silhouette veiled by mist.

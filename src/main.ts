@@ -24,6 +24,7 @@ import { specializeUber } from "./render/materials";
 import { BillboardSystem } from "./world/billboards";
 import { MobileControls } from "./ui/mobileControls";
 import { OrientationOverlay } from "./ui/orientationOverlay";
+import { HoardingModal } from "./ui/hoardingModal";
 
 const params = new URLSearchParams(location.search);
 const AUTOPLAY = params.has("autoplay") && params.get("autoplay") !== "0";
@@ -296,7 +297,30 @@ for (let i = 0; i < 8; i++) {
 }
 
 new OrientationOverlay();
-new MobileControls(input, explore, chase, pause, () => rider.bike.ringBell());
+const hoardingModal = new HoardingModal(billboards, (isOpen) => {
+  if (isOpen && document.pointerLockElement === canvasEl) {
+    document.exitPointerLock();
+  }
+});
+const mobileControls = new MobileControls(
+  input,
+  explore,
+  chase,
+  pause,
+  () => rider.bike.ringBell(),
+  () => hoardingModal.toggle(explore.playerX, explore.playerZ),
+);
+
+addEventListener("keydown", (e) => {
+  if (e.code === "KeyE" && !e.repeat && !pause.paused) {
+    if (hoardingModal.toggle(explore.playerX, explore.playerZ)) {
+      e.preventDefault();
+    }
+  } else if (e.code === "Escape" && hoardingModal.isOpen) {
+    hoardingModal.close();
+    e.preventDefault();
+  }
+});
 
 addEventListener("resize", () => {
   renderer.setSize(innerWidth, innerHeight);
@@ -463,6 +487,8 @@ function frame(now: number) {
   prof.poll();
 
   hud.textContent = onFoot ? "WASD · Walk  |  Shift · Lurch  |  F · Ride" : `${Math.round(ctl.speed * 3.6)} km/h`;
+  const nearHoarding = hoardingModal.update(px, pz);
+  mobileControls.setMoneyButtonVisible(!!nearHoarding);
   frames++;
   fpsT += dt;
   if (fpsT >= 1) {

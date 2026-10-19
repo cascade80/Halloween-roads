@@ -3,8 +3,8 @@ import { CHUNK, L, NCHUNK, RIBBON_HALF, faceRoadFromLeft, faceRoadFromRight, gro
 import { ID, M, box, merge, prep, shear, wire, xf } from "./geo";
 import { bridgePlate, busStop, convexMirror, drainCanal, jizo, keiTruck, laundryPole, parkedBike, phoneBox, potRow, shrine, stoneLantern, tomareSign, vegStand, vendingMachine } from "./street";
 import {
-  bambooGrove, farHouse, fence, graveStone, house, pole,
-  postBox, scarecrow, school, shadowWatcher, shed, stoneMarker, tree,
+  bambooGrove, cemeteryFence, farHouse, fence, graveStone, house, jackOLantern, pole,
+  postBox, sarcophagus, scarecrow, school, shadowWatcher, shed, stoneCross, stoneMarker, tree,
   warningSign, waterTower, type TreeKind, type ShopKind
 } from "./props";
 import { boulder, butterfly, floretCluster, flower, flowerSpike, fringeGrass, grassClump, leafPlant, riceTuft, shortGrass, vergeClump } from "./vegetation";
@@ -616,32 +616,138 @@ export function buildChunk(k: number): Chunk {
   put(laundryPole(507), 13.5, -62.6, roadYaw(-62.6) - 0.4, [[-1.3, 0, 0.2], [1.3, 0, 0.2]]);
   put(parkedBike("#e8e0cc"), 5.25, -50.9, toRoad(-50.9) + 0.35, [[0, 0.3, 0.3], [0, -0.3, 0.3]]);
 
-  // ---- abandoned roadside cemetery (z -345 to -365, right side meadow)
-  // Gravestone geometry placed here; overgrown vegetation added later with the grass/plant pass.
+  // ---- CONTINUOUS HALLOWEEN GRAVEYARD TRANSFORMATION ACROSS ALL CHUNKS ----
+  // Gravestones, stone crosses, sarcophagi, and glowing Jack-o'-lanterns across the entire world;
+  // overgrown dark grass added with the vegetation pass.
   const cemeterySpots: { u: number; z: number }[] = [];
   {
-    const cemeteryZ = -355;
-    if (inRange(cemeteryZ)) {
-      const cr = mulberry32(6661);
-      // Irregular cluster of 10 gravestones, scattered in a rough 2-row arc.
-      for (let i = 0; i < 10; i++) {
-        const row = i < 5 ? 0 : 1;
-        const ci = i < 5 ? i : i - 5;
-        // Stagger rows: back row offset slightly, irregular spacing.
-        const bu = 7.5 + row * range(cr, 2.2, 3.0) + range(cr, -0.4, 0.4);
-        const bz = cemeteryZ + (ci - 2) * range(cr, 2.8, 3.8) + range(cr, -0.6, 0.6);
-        if (!inRange(bz)) continue;
-        // Face roughly toward the road with individual variation.
-        const ry = toRoad(bz) + range(cr, -0.25, 0.25);
-        const g = graveStone(Math.floor(cr() * 1e5));
-        infraG.push(placeAt(g, bu, bz, ry, groundH(bu, bz) + 0.02));
-        colliders.push({ x: roadX(bz) + bu, z: bz, r: 0.35 });
-        cemeterySpots.push({ u: bu, z: bz });
+    const gr = mulberry32(1337 + k * 97);
+    const billboardSlotZ = -18 - k * CHUNK;
+
+    // 1. Right Side Graveyard Fields (u in [4.5, 20.0 m])
+    for (let z = z0 - 2; z > z1 + 2; z -= range(gr, 3.2, 5.2)) {
+      const nPlots = gr() < 0.35 ? 1 : gr() < 0.8 ? 2 : 3;
+      for (let p = 0; p < nPlots; p++) {
+        const u = 4.8 + p * range(gr, 3.0, 4.8) + range(gr, -0.5, 0.5);
+        if (u > 20.0) continue;
+        if (inHouse(u, z, 1.0)) continue;
+
+        // Yaw: mostly facing toward the road with eerie angular drift
+        const ry = toRoad(z) + range(gr, -0.35, 0.35);
+        const graveSeed = Math.floor(gr() * 1e6);
+        const roll = gr();
+
+        if (roll < 0.60) {
+          // Weathered gravestone
+          const g = graveStone(graveSeed);
+          infraG.push(placeAt(g, u, z, ry, groundH(u, z) + 0.02));
+          colliders.push({ x: roadX(z) + u, z, r: 0.35 });
+          cemeterySpots.push({ u, z });
+        } else if (roll < 0.82) {
+          // Ancient Gothic/Celtic stone cross
+          const g = stoneCross(graveSeed);
+          infraG.push(placeAt(g, u, z, ry, groundH(u, z) + 0.02));
+          colliders.push({ x: roadX(z) + u, z, r: 0.45 });
+          cemeterySpots.push({ u, z });
+        } else {
+          // Stone sarcophagus / burial crypt
+          const g = sarcophagus(graveSeed);
+          infraG.push(placeAt(g, u, z, ry + Math.PI / 2 + range(gr, -0.2, 0.2), groundH(u, z) + 0.02));
+          colliders.push({ x: roadX(z) + u, z, r: 0.75 });
+          cemeterySpots.push({ u, z });
+        }
+
+        // 28% chance of a glowing carved jack-o'-lantern perched beside the grave
+        if (gr() < 0.28) {
+          const pu = u + range(gr, -0.55, 0.55);
+          const pz = z + range(gr, -0.55, 0.55);
+          const pg = jackOLantern(Math.floor(gr() * 1e5));
+          infraG.push(placeAt(pg, pu, pz, ry + range(gr, -0.8, 0.8), groundH(pu, pz) + 0.01));
+        }
       }
-      // Weathered stone lantern with dying embers at cemetery entrance path
-      put(stoneLantern(), 5.6, -350, toRoad(-350), [[0, 0, 0.32]]);
-      // Neglected stone jizo marker at the overgrown verge
-      put(jizo(6665), 5.2, -348, toRoad(-348), [[0, 0, 0.3]]);
+    }
+
+    // 2. Right Side Roadside Jack-o'-Lantern Trail & Iron Cemetery Railings
+    for (let z = z0 - 6; z > z1 + 6; z -= range(gr, 12, 18)) {
+      if (inHouse(4.0, z, 0.4)) continue;
+      // Glowing pumpkin trail beacon along the grass verge edge
+      const pu = 3.9 + range(gr, -0.15, 0.2);
+      const pg = jackOLantern(Math.floor(gr() * 1e5));
+      infraG.push(placeAt(pg, pu, z, toRoad(z) + range(gr, -0.4, 0.4), groundH(pu, z) + 0.01));
+    }
+    // Wrought-iron spiked cemetery fences along select right-side verge stretches
+    if (gr() < 0.6) {
+      const fz = z0 - range(gr, 20, 50);
+      const flen = range(gr, 8, 14);
+      if (inRange(fz) && inRange(fz - flen) && !inHouse(4.4, fz, 0.6)) {
+        const fg = cemeteryFence(flen, Math.floor(gr() * 1e5));
+        infraG.push(placeAt(fg, 4.4, fz - flen / 2, roadYaw(fz - flen / 2)));
+      }
+    }
+
+    // 3. Left Side Graveyard & Roadside Berm (u in [-18.0, -4.6 m])
+    for (let z = z0 - 3; z > z1 + 3; z -= range(gr, 3.8, 6.2)) {
+      // Keep clear of the billboard hoarding frame (which sits at u = -7.0, z in [billboardSlotZ - 6.5, billboardSlotZ + 6.5])
+      const nearBillboard = Math.abs(z - billboardSlotZ) < 6.8;
+
+      const nPlots = gr() < 0.5 ? 1 : 2;
+      for (let p = 0; p < nPlots; p++) {
+        const u = -4.8 - p * range(gr, 3.2, 5.0) - range(gr, 0, 0.6);
+        if (u < -18.0) continue;
+        if (nearBillboard && u > -9.2 && u < -5.0) continue;
+
+        const ry = faceRoadFromLeft(z) + range(gr, -0.35, 0.35);
+        const graveSeed = Math.floor(gr() * 1e6);
+        const roll = gr();
+
+        if (roll < 0.65) {
+          const g = graveStone(graveSeed);
+          infraG.push(placeAt(g, u, z, ry, groundH(u, z) + 0.02));
+          colliders.push({ x: roadX(z) + u, z, r: 0.35 });
+          cemeterySpots.push({ u, z });
+        } else if (roll < 0.85) {
+          const g = stoneCross(graveSeed);
+          infraG.push(placeAt(g, u, z, ry, groundH(u, z) + 0.02));
+          colliders.push({ x: roadX(z) + u, z, r: 0.45 });
+          cemeterySpots.push({ u, z });
+        } else {
+          const g = sarcophagus(graveSeed);
+          infraG.push(placeAt(g, u, z, ry + Math.PI / 2, groundH(u, z) + 0.02));
+          colliders.push({ x: roadX(z) + u, z, r: 0.75 });
+          cemeterySpots.push({ u, z });
+        }
+
+        // 25% chance of glowing jack-o'-lantern
+        if (gr() < 0.25) {
+          const pu = u + range(gr, -0.5, 0.5);
+          const pz = z + range(gr, -0.5, 0.5);
+          const pg = jackOLantern(Math.floor(gr() * 1e5));
+          infraG.push(placeAt(pg, pu, pz, ry + range(gr, -0.6, 0.6), groundH(pu, pz) + 0.01));
+        }
+      }
+    }
+
+    // 4. Left Side Roadside Jack-o'-Lanterns (including near billboards)
+    for (let z = z0 - 8; z > z1 + 8; z -= range(gr, 14, 22)) {
+      const pu = -4.3 + range(gr, -0.2, 0.1);
+      const pg = jackOLantern(Math.floor(gr() * 1e5));
+      infraG.push(placeAt(pg, pu, z, faceRoadFromLeft(z) + range(gr, -0.4, 0.4), groundH(pu, z) + 0.01));
+    }
+
+    // Flanking glowing pumpkins at each billboard base
+    if (inRange(billboardSlotZ)) {
+      const p1 = jackOLantern(Math.floor(gr() * 1e5));
+      infraG.push(placeAt(p1, -6.6, billboardSlotZ + 6.2, faceRoadFromLeft(billboardSlotZ), groundH(-6.6, billboardSlotZ + 6.2) + 0.01));
+      const p2 = jackOLantern(Math.floor(gr() * 1e5));
+      infraG.push(placeAt(p2, -6.6, billboardSlotZ - 6.2, faceRoadFromLeft(billboardSlotZ), groundH(-6.6, billboardSlotZ - 6.2) + 0.01));
+    }
+
+    // 5. Shadow Watchers in the Distant Mist (1-2 per chunk)
+    const nWatchers = gr() < 0.4 ? 1 : 2;
+    for (let w = 0; w < nWatchers; w++) {
+      const wz = range(gr, z1 + 5, z0 - 5);
+      const wu = gr() < 0.5 ? range(gr, 18, 32) : range(gr, -30, -18);
+      infraG.push(placeAt(shadowWatcher(), wu, wz, (wu > 0 ? toRoad(wz) : faceRoadFromLeft(wz)) + range(gr, -0.2, 0.2), groundH(wu, wz) + 0.02));
     }
   }
 
@@ -978,22 +1084,19 @@ export function buildChunk(k: number): Chunk {
   }
   // Cemetery overgrown vegetation (gravestone positions stored earlier).
   if (cemeterySpots.length > 0) {
-    const cr = mulberry32(6662);
-    // Dense dark grass clumps around each gravestone.
+    const cr = mulberry32(6662 + k * 83);
+    // Dark weathered grass clumps around gravestones.
     for (const s of cemeterySpots) {
-      for (let j = 0; j < 3; j++) {
-        const gu = s.u + range(cr, -0.6, 0.6);
-        const gz = s.z + range(cr, -0.5, 0.5);
-        pushInst(grass[Math.floor(cr() * 3)], roadX(gz) + gu, groundH(gu, gz) - 0.03, gz,
-          cr() * 6.28, range(cr, 0.9, 1.4), range(cr, 0.9, 1.5),
-          hsl(col("#c8c4b8"), cr, 0.02, 0.06, -0.08));
-      }
+      const gu = s.u + range(cr, -0.4, 0.4);
+      const gz = s.z + range(cr, -0.4, 0.4);
+      pushInst(grass[Math.floor(cr() * 3)], roadX(gz) + gu, groundH(gu, gz) - 0.03, gz,
+        cr() * 6.28, range(cr, 0.85, 1.35), range(cr, 0.85, 1.45),
+        hsl(col("#c8c4b8"), cr, 0.02, 0.06, -0.08));
     }
-    // Scattered undergrowth across the cemetery plot.
-    const cemeteryZ = -355;
-    for (let i = 0; i < 18; i++) {
-      const pu = range(cr, 6.5, 14);
-      const pz = range(cr, cemeteryZ - 8, cemeteryZ + 8);
+    // Scattered dark undergrowth across the chunk's graveyard plots.
+    for (let i = 0; i < 24; i++) {
+      const pu = cr() < 0.65 ? range(cr, 5.0, 16.0) : range(cr, -16.0, -5.0);
+      const pz = range(cr, z1, z0);
       const py = groundH(pu, pz) - 0.02;
       const px = roadX(pz) + pu;
       if (cr() < 0.5)
@@ -1003,9 +1106,10 @@ export function buildChunk(k: number): Chunk {
         pushInst(broad[Math.floor(cr() * 2)], px, py, pz, cr() * 6.28,
           range(cr, 0.8, 1.2), undefined, hsl(col("#bab4a8"), cr, 0.02, 0.05, -0.06));
     }
-    // Mossy boulders in the cemetery.
-    for (let i = 0; i < 2; i++) {
-      const bu = range(cr, 7, 13), bz = cemeteryZ + range(cr, -6, 6);
+    // Mossy weathered cemetery rocks scattered in the graveyard.
+    for (let i = 0; i < 4; i++) {
+      const bu = cr() < 0.6 ? range(cr, 6, 15) : range(cr, -15, -6);
+      const bz = range(cr, z1, z0);
       pushInst(rocks[Math.floor(cr() * 2)], roadX(bz) + bu,
         groundH(bu, bz) - 0.15, bz, cr() * 6.28, range(cr, 0.4, 0.75));
     }

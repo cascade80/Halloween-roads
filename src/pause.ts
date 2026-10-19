@@ -14,6 +14,7 @@ const CONTROLS: [string, string][] = [
   ["A  D", "steer / turn"],
   ["Shift", "sprint"],
   ["Mouse", "look around"],
+  ["E", "check hoarding value & ad rates"],
   ["F", "mount · dismount bicycle"],
   ["C", "cinematic cameras"],
   ["V", "first person"],

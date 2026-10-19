@@ -24,6 +24,91 @@ export const BILLBOARD_SLOTS: BillboardDef[] = [
   { index: 7, canonZ: -640, u: -7.0, yawOffset: 0.22, defaultTitle: "TECHYON SURVIVORS" },
 ];
 
+export interface BillboardPricing {
+  locationName: string;
+  dailyRate: string;
+  weeklyRate: string;
+  monthlyRate: string;
+  dailyImpressions: string;
+  tier: string;
+  advertiser: string;
+}
+
+export const BILLBOARD_PRICING: BillboardPricing[] = [
+  {
+    locationName: "Highway 14 — Techyon North Approach (Km 0.8)",
+    dailyRate: "₹4,000 ($48)",
+    weeklyRate: "₹25,000 ($300)",
+    monthlyRate: "₹85,000 ($1,020)",
+    dailyImpressions: "24,500 commuters / day",
+    tier: "Tier 1 — Prime Highway Frontage",
+    advertiser: "BOTNET — The Greatest Clan To Ever Exist",
+  },
+  {
+    locationName: "Highway 14 — Junction Overlook (Km 1.6)",
+    dailyRate: "₹3,500 ($42)",
+    weeklyRate: "₹22,000 ($265)",
+    monthlyRate: "₹75,000 ($900)",
+    dailyImpressions: "19,800 commuters / day",
+    tier: "Tier 1 — High Visibility Bend",
+    advertiser: "BOTNET — The Greatest Clan To Ever Exist",
+  },
+  {
+    locationName: "JUET Arena Crossroads (Km 2.4)",
+    dailyRate: "₹5,000 ($60)",
+    weeklyRate: "₹32,000 ($385)",
+    monthlyRate: "₹110,000 ($1,320)",
+    dailyImpressions: "31,200 commuters / day",
+    tier: "Platinum Tier — Techfest Central Arena",
+    advertiser: "BOTNET — The Greatest Clan To Ever Exist",
+  },
+  {
+    locationName: "Highway 14 — Midway Curve (Km 3.2)",
+    dailyRate: "₹3,000 ($36)",
+    weeklyRate: "₹18,000 ($215)",
+    monthlyRate: "₹62,000 ($745)",
+    dailyImpressions: "16,400 commuters / day",
+    tier: "Tier 2 — Settlement Arterial",
+    advertiser: "BOTNET — The Greatest Clan To Ever Exist",
+  },
+  {
+    locationName: "Cemetery Straight (Km 4.0)",
+    dailyRate: "₹2,800 ($34)",
+    weeklyRate: "₹17,000 ($205)",
+    monthlyRate: "₹58,000 ($700)",
+    dailyImpressions: "14,800 commuters / day",
+    tier: "Tier 2 — Meadow Corridor",
+    advertiser: "BOTNET — The Greatest Clan To Ever Exist",
+  },
+  {
+    locationName: "Black Forest Gateway (Km 4.8)",
+    dailyRate: "₹3,200 ($38)",
+    weeklyRate: "₹20,000 ($240)",
+    monthlyRate: "₹68,000 ($815)",
+    dailyImpressions: "17,500 commuters / day",
+    tier: "Tier 2 — Forest Threshold",
+    advertiser: "BOTNET — The Greatest Clan To Ever Exist",
+  },
+  {
+    locationName: "Deep Woods Sector 7 (Km 5.6)",
+    dailyRate: "₹3,600 ($43)",
+    weeklyRate: "₹23,000 ($275)",
+    monthlyRate: "₹78,000 ($935)",
+    dailyImpressions: "18,900 commuters / day",
+    tier: "Tier 1 — South Highway Link",
+    advertiser: "BOTNET — The Greatest Clan To Ever Exist",
+  },
+  {
+    locationName: "Techyon South Perimeter Gate (Km 6.4)",
+    dailyRate: "₹4,500 ($54)",
+    weeklyRate: "₹28,000 ($335)",
+    monthlyRate: "₹95,000 ($1,140)",
+    dailyImpressions: "28,000 commuters / day",
+    tier: "Tier 1 — Terminal Entrance",
+    advertiser: "BOTNET — The Greatest Clan To Ever Exist",
+  },
+];
+
 const BILLBOARD_VS = /* glsl */ `
 out vec2 vUv;
 out vec3 vWPos;
@@ -300,6 +385,39 @@ export class BillboardSystem {
       group.position.set(targetX, groundY, wrappedZ);
       group.rotation.y = targetYaw;
     });
+  }
+
+  /**
+   * Finds the nearest billboard within maxDist (meters), returning its slot, distance, and ad pricing.
+   */
+  getNearestBillboard(px: number, pz: number, maxDist = 22): {
+    index: number;
+    dist: number;
+    slot: BillboardDef;
+    pricing: BillboardPricing;
+    group: THREE.Group;
+  } | null {
+    let nearest: { index: number; dist: number; slot: BillboardDef; pricing: BillboardPricing; group: THREE.Group } | null = null;
+    let minDist = maxDist;
+
+    this.root.children.forEach((group, i) => {
+      const slot = BILLBOARD_SLOTS[i];
+      const dx = px - group.position.x;
+      const dz = pz - group.position.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = {
+          index: i,
+          dist,
+          slot,
+          pricing: BILLBOARD_PRICING[i] ?? BILLBOARD_PRICING[0],
+          group: group as THREE.Group,
+        };
+      }
+    });
+
+    return nearest;
   }
 
   /**
