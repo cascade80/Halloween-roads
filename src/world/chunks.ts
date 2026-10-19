@@ -3,9 +3,9 @@ import { CHUNK, L, NCHUNK, RIBBON_HALF, faceRoadFromLeft, faceRoadFromRight, gro
 import { ID, M, box, merge, prep, shear, wire, xf } from "./geo";
 import { bridgePlate, busStop, convexMirror, drainCanal, jizo, keiTruck, laundryPole, parkedBike, phoneBox, potRow, shrine, stoneLantern, tomareSign, vegStand, vendingMachine } from "./street";
 import {
-  autumnLeafCluster, bambooGrove, cemeteryFence, farHouse, fence, graveStone, hangingLantern, house,
-  jackOLantern, lanternString, pole, postBox, roadRune, sarcophagus, scarecrow, school, shadowWatcher,
-  shed, spectralFlame, stoneCross, stoneMarker, tree, warningSign, waterTower, type TreeKind, type ShopKind
+  autumnLeafCluster, bambooGrove, farHouse, graveStone, house,
+  jackOLantern, pole, postBox, sarcophagus, scarecrow, school, shadowWatcher,
+  shed, stoneCross, stoneMarker, tree, warningSign, waterTower, type TreeKind, type ShopKind
 } from "./props";
 import { boulder, butterfly, floretCluster, flower, flowerSpike, fringeGrass, grassClump, leafPlant, riceTuft, shortGrass, vergeClump } from "./vegetation";
 import { poleLamp } from "./lights";
@@ -528,32 +528,10 @@ export function buildChunk(k: number): Chunk {
     houseG.push(placeAt(g, h.u + h.w / 2, h.z, houseYaw, houseY));
     colliders.push({ x: roadX(h.z) + h.u + h.w / 2, z: h.z, r: Math.max(h.w, h.d) * 0.55 });
 
-    // Japanese festival chochin lanterns hanging under front eaves of houses
-    const hr = mulberry32(h.seed + 202);
-    const lantCol1 = pick(hr, ["#f05a18", "#d62024", "#e87a14", "#8c28cc"]);
-    const lantCol2 = pick(hr, ["#f05a18", "#d62024", "#e87a14"]);
-    const eaveY = h.floors === 2 ? 5.1 : 2.75;
-    const l1 = hangingLantern(lantCol1);
-    l1.translate(-h.w * 0.28, eaveY, h.d * 0.52);
-    infraG.push(placeAt(l1, h.u + h.w / 2, h.z, houseYaw, houseY));
-
-    const l2 = hangingLantern(lantCol2);
-    l2.translate(h.w * 0.28, eaveY, h.d * 0.52);
-    infraG.push(placeAt(l2, h.u + h.w / 2, h.z, houseYaw, houseY));
-
     // Fallen autumn leaves on front entrance stoop
     const stoopLeaves = autumnLeafCluster(h.seed + 77);
     stoopLeaves.translate(0, 0.01, h.d * 0.52 + 0.3);
     infraG.push(placeAt(stoopLeaves, h.u + h.w / 2, h.z, houseYaw, houseY));
-  }
-  // Cross-street festival lantern strings spanning across the roadway
-  if (inRange(-112)) {
-    const ls = lanternString(7.8, 1120);
-    infraG.push(placeAt(ls, 0, -112, roadYaw(-112), 4.15));
-  }
-  if (inRange(-242)) {
-    const ls = lanternString(7.8, 2420);
-    infraG.push(placeAt(ls, 0, -242, roadYaw(-242), 4.15));
   }
 
   // ---- street furniture (right side): shop row, shrine grounds, hamlet yard
@@ -577,12 +555,7 @@ export function buildChunk(k: number): Chunk {
   put(tomareSign(), 3.35, -186, roadYaw(-186) - 0.2, [[0, 0, 0.2]]);
   put(convexMirror(), 3.3, -191, roadYaw(-191) + 0.5, [[0, 0, 0.2]]);
   for (let i = 0; i < 3; i++) put(jizo(400 + i), 4.25, -193.6 - i * 0.62, toRoad(-194), [[0, 0, 0.3]]);
-  for (const lz of [-197.3, -202.7]) {
-    put(stoneLantern(), 4.9, lz, toRoad(lz), [[0, 0, 0.32]]);
-    // Violet spectral flame burning atop each stone lantern approach post
-    const flm = spectralFlame("#a832ff", 0.95);
-    infraG.push(placeAt(flm, 4.9, lz, toRoad(lz), groundH(4.9, lz) + 1.58));
-  }
+  for (const lz of [-197.3, -202.7]) put(stoneLantern(), 4.9, lz, toRoad(lz), [[0, 0, 0.32]]);
   {
     const sh = shrine();
     const solid: [number, number, number][] = [[-1.3, 0, 0.27], [1.3, 0, 0.27]];
@@ -593,18 +566,9 @@ export function buildChunk(k: number): Chunk {
       for (const [tu, tz, k] of [[9.5, -195.5, "cedar"], [10.5, -204.8, "cedar"], [13.8, -196.8, "round"], [14.5, -203.5, "tall"], [16.5, -200.5, "cedar"], [12, -208, "round"]] as [number, number, TreeKind][])
         addTreeLater.push([k, tu, tz, range(sr, 0.9, 1.2)]);
 
-      // Red Torii Halloween decorations: hanging chochin lanterns on torii beam, glowing jack-o'-lanterns on stone steps, cyan spectral flame atop hokora
+      // Red Torii Halloween decorations: hanging chochin lanterns on torii beam and glowing jack-o'-lanterns on stone steps
       const sYaw = toRoad(-200);
       const sBaseY = groundH(5.6, -200);
-
-      // Hanging lanterns on Torii crossbeam (x = +/-0.9, y = 2.75)
-      const lantT1 = hangingLantern("#f05a18");
-      lantT1.translate(-0.9, 2.75, 0.05);
-      infraG.push(placeAt(lantT1, 5.6, -200, sYaw, sBaseY));
-
-      const lantT2 = hangingLantern("#d62024");
-      lantT2.translate(0.9, 2.75, 0.05);
-      infraG.push(placeAt(lantT2, 5.6, -200, sYaw, sBaseY));
 
       // Jack-o'-lanterns perched on stone steps
       const pStep1 = jackOLantern(701);
@@ -618,11 +582,6 @@ export function buildChunk(k: number): Chunk {
       const pPlatform = jackOLantern(703);
       pPlatform.translate(-0.85, 1.76, -5.2);
       infraG.push(placeAt(pPlatform, 5.6, -200, sYaw, sBaseY));
-
-      // Luminous cyan spectral flame atop the sacred hokora shrine
-      const flmHokora = spectralFlame("#00f0ff", 1.25);
-      flmHokora.translate(0, 3.05, -6.38);
-      infraG.push(placeAt(flmHokora, 5.6, -200, sYaw, sBaseY));
     }
   }
   // Hamlet yard (z -223..-253): vegetable stand, vending machine, kei truck, laundry, bike, mirror.
@@ -678,14 +637,6 @@ export function buildChunk(k: number): Chunk {
           cemeterySpots.push({ u, z });
         }
 
-        // 18% chance of violet or cyan spectral flame burning atop the tombstone
-        if (gr() < 0.18) {
-          const flameCol = gr() < 0.5 ? "#b442ff" : "#00f0ff";
-          const flameH = roll < 0.60 ? 1.05 : roll < 0.82 ? 1.45 : 0.75;
-          const fg = spectralFlame(flameCol, 0.9);
-          infraG.push(placeAt(fg, u, z, ry, groundH(u, z) + flameH));
-        }
-
         // 22% chance of fallen autumn leaf cluster at the base of the grave
         if (gr() < 0.22) {
           infraG.push(placeAt(autumnLeafCluster(graveSeed + 33), u + range(gr, -0.3, 0.3), z + range(gr, -0.3, 0.3), ry, groundH(u, z) + 0.01));
@@ -701,14 +652,6 @@ export function buildChunk(k: number): Chunk {
       }
     }
 
-    // 2. Right Side Roadside Jack-o'-Lantern Trail & Iron Cemetery Railings
-    for (let z = z0 - 6; z > z1 + 6; z -= range(gr, 12, 18)) {
-      if (inHouse(4.0, z, 0.4)) continue;
-      // Glowing pumpkin trail beacon along the grass verge edge
-      const pu = 3.9 + range(gr, -0.15, 0.2);
-      const pg = jackOLantern(Math.floor(gr() * 1e5));
-      infraG.push(placeAt(pg, pu, z, toRoad(z) + range(gr, -0.4, 0.4), groundH(pu, z) + 0.01));
-    }
     // 3. Left Side Graveyard & Roadside Berm (u in [-18.0, -4.6 m])
     for (let z = z0 - 3; z > z1 + 3; z -= range(gr, 3.8, 6.2)) {
       // Keep clear of the billboard hoarding frame (which sits at u = -7.0, z in [billboardSlotZ - 6.5, billboardSlotZ + 6.5])
@@ -741,14 +684,6 @@ export function buildChunk(k: number): Chunk {
           cemeterySpots.push({ u, z });
         }
 
-        // 18% chance of violet or cyan spectral flame
-        if (gr() < 0.18) {
-          const flameCol = gr() < 0.5 ? "#b442ff" : "#00f0ff";
-          const flameH = roll < 0.65 ? 1.05 : roll < 0.85 ? 1.45 : 0.75;
-          const fg = spectralFlame(flameCol, 0.9);
-          infraG.push(placeAt(fg, u, z, ry, groundH(u, z) + flameH));
-        }
-
         // 22% chance of fallen autumn leaf cluster
         if (gr() < 0.22) {
           infraG.push(placeAt(autumnLeafCluster(graveSeed + 33), u + range(gr, -0.3, 0.3), z + range(gr, -0.3, 0.3), ry, groundH(u, z) + 0.01));
@@ -764,20 +699,7 @@ export function buildChunk(k: number): Chunk {
       }
     }
 
-    // 4. Left Side Roadside Jack-o'-Lanterns (including near billboards)
-    for (let z = z0 - 8; z > z1 + 8; z -= range(gr, 14, 22)) {
-      const pu = -4.3 + range(gr, -0.2, 0.1);
-      const pg = jackOLantern(Math.floor(gr() * 1e5));
-      infraG.push(placeAt(pg, pu, z, faceRoadFromLeft(z) + range(gr, -0.4, 0.4), groundH(pu, z) + 0.01));
-    }
 
-    // Flanking glowing pumpkins at each billboard base
-    if (inRange(billboardSlotZ)) {
-      const p1 = jackOLantern(Math.floor(gr() * 1e5));
-      infraG.push(placeAt(p1, -6.6, billboardSlotZ + 6.2, faceRoadFromLeft(billboardSlotZ), groundH(-6.6, billboardSlotZ + 6.2) + 0.01));
-      const p2 = jackOLantern(Math.floor(gr() * 1e5));
-      infraG.push(placeAt(p2, -6.6, billboardSlotZ - 6.2, faceRoadFromLeft(billboardSlotZ), groundH(-6.6, billboardSlotZ - 6.2) + 0.01));
-    }
 
     // 5. Roadside Scattered Autumn Leaf Clusters along Asphalt Verges & Curbs
     for (let lz = z0 - 4; lz > z1 + 4; lz -= range(gr, 9, 15)) {
@@ -786,14 +708,7 @@ export function buildChunk(k: number): Chunk {
       infraG.push(placeAt(autumnLeafCluster(Math.floor(gr() * 1e5)), lu, lz, roadYaw(lz) + range(gr, -0.5, 0.5), groundH(lu, lz) + 0.005));
     }
 
-    // 6. Glowing Supernatural Festival Runes Painted on Asphalt Shoulder (1-2 per chunk)
-    for (let i = 0; i < 2; i++) {
-      const rz = z0 - range(gr, 8 + i * 40, 36 + i * 40);
-      if (inRange(rz)) {
-        const ru = (gr() < 0.5 ? 1 : -1) * range(gr, 1.4, 2.1);
-        infraG.push(placeAt(roadRune(Math.floor(gr() * 1e5)), ru, rz, roadYaw(rz), 0.005));
-      }
-    }
+
 
     // 7. Shadow Watchers in the Distant Mist (1-2 per chunk)
     const nWatchers = gr() < 0.4 ? 1 : 2;

@@ -18,7 +18,6 @@ import { precompile, warmDraws } from "./render/precompile";
 import { leafAtlas } from "./render/leafAtlas";
 import { signAtlas } from "./render/signAtlas";
 import { TimeOfDay, type Preset } from "./world/timeofday";
-import { Fireflies } from "./world/fireflies";
 import { Profiler } from "./render/profiler";
 import { specializeUber } from "./render/materials";
 import { BillboardSystem } from "./world/billboards";
@@ -102,8 +101,6 @@ scene.add(rider.root);
 scene.add(rider.walker);
 const birds = new Birds();
 scene.add(birds.group);
-const fireflies = new Fireflies();
-scene.add(fireflies.mesh);
 
 const shadow = new SunShadow(2048, 55);
 const reflection = new PaddyReflection(Math.floor(innerWidth * 0.5), Math.floor(innerHeight * 0.5));
@@ -115,7 +112,7 @@ const camParam = params.get("cam");
 if (camParam === "fpp") {
   chase.fpp = 1;
 } else if (camParam) chase.mode = camParam as CamMode;
-if (!params.has("nospec")) for (const o of [rider.root, rider.walker, birds.group, fireflies.mesh]) specializeUber(o);
+if (!params.has("nospec")) for (const o of [rider.root, rider.walker, birds.group]) specializeUber(o);
 const post = new Post(renderer, innerWidth, innerHeight, { kuwahara: KUWA, msaa: Number(params.get("msaa") ?? 4) });
 const prof = new Profiler(renderer, params.has("prof"));
 post.prof = prof;
@@ -443,10 +440,7 @@ function frame(now: number) {
   birds.activity = tod.birds;
   birds.update(dt, t, chase.cam, _actor.set(px, 0, pz));
   prof.cpuEnd();
-  prof.cpuBegin("fireflies");
-  fireflies.update(pz, tod.night);
   rider.bike.setLamp(tod.night);
-  prof.cpuEnd();
   prof.cpuBegin("audio");
   if (audio.state === "running") {
     near = world.closeness(px, pz);
